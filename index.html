@@ -1,9 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ZetGram Chat (Telegram-like)</title>
+<title>ZetGram с админ консолью</title>
+
 <style>
   :root {
     --bg: #1a0000;
@@ -12,371 +13,320 @@
     --accent-2: #ff4c4c;
     --muted: #ff9999;
     --nice: #ffefef;
-    --glass: rgba(255, 255, 255, 0.03);
+    --glass: rgba(255,255,255,0.03);
   }
-  * {
-    box-sizing: border-box;
-  }
+  * { box-sizing: border-box; }
   body, html {
-    margin: 0; padding: 0;
-    font-family: Inter,Segoe UI,Roboto,Arial,sans-serif;
-    height: 100vh;
-    background: var(--bg);
-    color: var(--nice);
-    overflow: hidden;
+    margin: 0; padding: 0; height: 100%; font-family: Inter,Segoe UI,Roboto,Arial,sans-serif;
+    background: var(--bg); color: var(--nice);
   }
-  #header {
-    height: 52px;
+  #app {
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
     background: linear-gradient(90deg, var(--accent), #7e0000);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 16px;
-    font-weight: 700;
-    font-size: 18px;
+    padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.5);
   }
-  #header #userInfo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  header .title {
+    font-weight: 700; font-size: 20px;
   }
-  #header #userAvatar {
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background-color: var(--accent-2);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    font-size: 18px;
-    user-select: none;
+  header .user-info {
+    display: flex; align-items: center; gap: 15px; color: var(--nice);
   }
-  #header #userName {
-    font-weight: 700;
-    user-select: none;
-  }
-  #logoutBtn {
-    background: transparent;
-    border: 1.5px solid var(--muted);
-    border-radius: 8px;
-    color: var(--muted);
+  header .user-info button {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
     cursor: pointer;
-    padding: 4px 10px;
     font-weight: 600;
-    transition: background-color 0.2s ease;
   }
-  #logoutBtn:hover {
-    background-color: var(--accent-2);
-    color: #fff;
+  
+  main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
   }
 
-  #app {
-    height: calc(100vh - 52px);
-    display: flex;
-    overflow: hidden;
-  }
+  /* Sidebar: пользователи и группы */
   #sidebar {
-    width: 280px;
+    width: 250px;
     background: var(--panel);
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   }
   #sidebar h2 {
-    margin: 0 0 12px 0;
+    margin-top: 0; margin-bottom: 8px;
     color: var(--accent-2);
-    user-select: none;
   }
-  #usersList, #groupsList {
+  .list-section {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
   }
-  .list-item {
-    padding: 10px;
-    border-radius: 8px;
+  .list-section h3 {
+    margin: 8px 0 6px 0;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--accent-2);
+    border-bottom: 1px solid var(--accent-2);
+    padding-bottom: 4px;
+  }
+  .item {
+    padding: 8px;
     cursor: pointer;
+    border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
     user-select: none;
-    transition: background-color 0.15s ease;
   }
-  .list-item:hover, .list-item.active {
+  .item:hover {
     background: var(--accent);
   }
-  .avatar-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    background-color: var(--accent-2);
+  .item.selected {
+    background: var(--accent-2);
+  }
+  .avatar {
+    width: 30px; height: 30px;
+    background: var(--accent);
+    border-radius: 6px;
     color: white;
     font-weight: 700;
     display: flex;
     justify-content: center;
     align-items: center;
   }
-  .item-info {
-    display: flex;
-    flex-direction: column;
-  }
-  .item-name {
-    font-weight: 600;
-  }
-  .item-status {
-    font-size: 12px;
+  .status {
+    font-size: 11px;
     color: var(--muted);
+    margin-left: auto;
   }
 
-  #chatWrapper {
+  /* Chat panel */
+  #chat-panel {
     flex: 1;
-    background: linear-gradient(180deg, #240606, #2a0f0f);
     display: flex;
     flex-direction: column;
-    border-radius: 0 12px 12px 0;
+    background: linear-gradient(180deg,#240606,#2a0f0f);
+    padding: 10px;
     box-shadow: 0 8px 30px rgba(0,0,0,0.6);
   }
-  #chatHeader {
-    padding: 12px 16px;
-    font-weight: 700;
-    border-bottom: 1px solid rgba(255,0,0,0.2);
-    user-select: none;
-  }
-  #messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    scroll-behavior: smooth;
-  }
-  .message {
-    max-width: 70%;
-    padding: 10px 12px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-    word-break: break-word;
-    background: #4a0a0a;
-    user-select: text;
-  }
-  .message.mine {
-    align-self: flex-end;
-    background: linear-gradient(180deg, var(--accent), #8b0000);
-  }
-  .message .meta {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 6px;
-  }
-  .avatar-sm {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    color: white;
-  }
-  .author {
+
+  #chat-header {
     font-weight: 700;
     color: var(--accent-2);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
   }
-  .time {
+
+  #chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .msg {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: #4a0a0a;
+    color: var(--nice);
+    word-break: break-word;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  }
+  .msg.mine {
+    align-self: flex-end;
+    background: linear-gradient(180deg,var(--accent),#8b0000);
+  }
+  .msg .meta {
     font-size: 12px;
     color: var(--muted);
-    margin-left: 6px;
-  }
-  .msg-text {
-    font-size: 15px;
-  }
-  .msg-img {
-    display: block;
-    max-width: 320px;
-    border-radius: 8px;
-    margin-top: 6px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.5);
-  }
-
-  .del-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    background: transparent;
-    border: none;
-    color: var(--muted);
+    margin-bottom: 4px;
     font-weight: 700;
-    cursor: pointer;
   }
-
-  #inputBar {
+  #input-area {
+    margin-top: 10px;
     display: flex;
     gap: 8px;
-    align-items: center;
-    margin-top: 8px;
-    padding: 8px 12px;
-    border-top: 1px solid rgba(255,0,0,0.06);
   }
-  #textInput {
+  #message-input {
     flex: 1;
-    resize: none;
-    padding: 8px;
     border-radius: 8px;
-    background: var(--glass);
     border: none;
-    color: var(--nice);
+    padding: 10px;
     font-size: 15px;
-    outline: none;
+    background: var(--glass);
+    color: var(--nice);
+    resize: none;
   }
-  #fileInput {
-    display: none;
-  }
-  #attachBtn {
-    background: transparent;
-    border: 2px dashed rgba(255,255,255,0.06);
-    padding: 6px;
-    border-radius: 8px;
-    color: var(--muted);
-    cursor: pointer;
-    font-size: 18px;
-  }
-  #sendBtn {
-    background: linear-gradient(90deg, var(--accent), #ff3b3b);
+  #send-btn {
+    background: linear-gradient(90deg,var(--accent),#ff3b3b);
     border: none;
     color: white;
-    padding: 8px 12px;
+    padding: 0 20px;
+    font-weight: 700;
     border-radius: 8px;
     cursor: pointer;
-    font-weight: 700;
   }
 
-  /* Floating chat open button bottom right */
-  #chatToggleBtn {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--accent-2);
-    border: none;
-    color: white;
-    font-size: 28px;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 8px rgba(255, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    user-select: none;
-    z-index: 99999;
-    transition: background-color 0.3s ease;
-  }
-  #chatToggleBtn:hover {
-    background: var(--accent);
-  }
-
-  /* Hide chat area initially on small screens */
-  #chatWrapper.hidden {
-    display: none;
-  }
-
-  /* Scrollbar styling */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: var(--accent-2);
-    border-radius: 4px;
-  }
-  ::-webkit-scrollbar-track {
+  /* Админ консоль */
+  #admin-console {
     background: var(--panel);
+    color: var(--nice);
+    padding: 10px;
+    font-size: 14px;
+    margin-top: 12px;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+    flex-direction: column;
+  }
+  #admin-console h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    color: var(--accent-2);
+  }
+  .admin-action {
+    margin-bottom: 8px;
+  }
+  .admin-action label {
+    margin-right: 6px;
+  }
+  .admin-action input {
+    border-radius: 4px;
+    border: none;
+    padding: 4px 6px;
+    width: 140px;
+  }
+  .admin-action button {
+    background: var(--accent);
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 700;
   }
 
-  /* Small advertisement block */
-  #adBlock {
+  /* Реклама внизу справа */
+  #ad-container {
     position: fixed;
-    bottom: 80px;
-    right: 16px;
+    bottom: 12px;
+    right: 12px;
     width: 220px;
-    background: rgba(0,0,0,0.6);
+    height: 70px;
+    background: rgba(0,0,0,0.5);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
-    user-select: none;
-    z-index: 99999;
+    box-shadow: 0 0 8px var(--accent);
+    z-index: 9999;
   }
-  #adBlock iframe {
+  #ad-container iframe {
     width: 100%;
-    height: 60px;
-    border: none;
-    display: block;
+    height: 100%;
+    border: 0;
   }
 
-  /* Responsive */
-  @media (max-width: 900px) {
-    #sidebar {
-      width: 200px;
-    }
-    #chatWrapper {
-      display: none;
-    }
-    #chatWrapper.show {
-      display: flex;
-      position: fixed;
-      top: 52px;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: var(--bg);
+  /* Мобильная адаптация */
+  @media (max-width: 700px) {
+    main {
       flex-direction: column;
-      border-radius: 0;
-      z-index: 99998;
     }
-    #chatToggleBtn {
-      bottom: 16px;
-      right: 16px;
+    #sidebar {
+      width: 100%;
+      height: 120px;
+      display: flex;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .list-section {
+      margin-bottom: 0;
+      display: flex;
+      flex-direction: row;
+      gap: 12px;
+      overflow-x: auto;
+    }
+    .item {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    #chat-panel {
+      flex: 1;
+      height: calc(100vh - 200px);
+    }
+    #ad-container {
+      width: 180px;
+      height: 60px;
+      bottom: 8px;
+      right: 8px;
     }
   }
 </style>
 </head>
 <body>
 
-<div id="header">
-  <div>ZetGram 🔴</div>
-  <div id="userInfo" aria-live="polite">
-    <!-- User info + logout button -->
-  </div>
-</div>
-
-<div id="app" role="main">
-  <div id="sidebar" aria-label="Список пользователей и групп">
-    <h2>Пользователи</h2>
-    <div id="usersList" tabindex="0" aria-label="Список пользователей"></div>
-    <h2>Группы</h2>
-    <div id="groupsList" tabindex="0" aria-label="Список групп"></div>
-  </div>
-
-  <div id="chatWrapper" class="hidden" aria-label="Окно чата" role="region">
-    <div id="chatHeader" aria-live="polite">Выберите чат слева</div>
-    <div id="messages" tabindex="0" aria-label="Сообщения чата"></div>
-    <div id="inputBar" role="region" aria-label="Отправка сообщения">
-      <textarea id="textInput" placeholder="Напишите сообщение (Enter — отправить, Shift+Enter — новая строка)" rows="2"></textarea>
-      <label for="fileInput" id="attachBtn" title="Прикрепить изображение">📎</label>
-      <input id="fileInput" type="file" accept="image/*" />
-      <button id="sendBtn" aria-label="Отправить сообщение">Отправить</button>
+<div id="app">
+  <header>
+    <div class="title">ZetGram 🔴</div>
+    <div class="user-info" id="user-info">
+      <!-- info + кнопка выхода -->
     </div>
+  </header>
+
+  <main>
+    <aside id="sidebar" aria-label="Список пользователей и групп">
+      <div class="list-section" id="users-section">
+        <h3>Пользователи</h3>
+        <div id="users-list"></div>
+      </div>
+      <div class="list-section" id="groups-section">
+        <h3>Группы</h3>
+        <div id="groups-list"></div>
+      </div>
+    </aside>
+
+    <section id="chat-panel" aria-label="Чат">
+      <div id="chat-header">Выберите собеседника</div>
+      <div id="chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <div id="input-area">
+        <textarea id="message-input" placeholder="Введите сообщение..." rows="2"></textarea>
+        <button id="send-btn" aria-label="Отправить сообщение">Отправить</button>
+      </div>
+
+      <div id="admin-console">
+        <h3>Админ консоль</h3>
+        <div class="admin-action">
+          <label for="admin-user-id">User ID:</label>
+          <input type="text" id="admin-user-id" placeholder="UID пользователя" />
+          <button id="btn-mute">Мут</button>
+          <button id="btn-ban">Бан</button>
+        </div>
+        <div>
+          <button id="btn-view-all-ls">Читать все ЛС</button>
+          <button id="btn-view-normal">Назад к обычному чату</button>
+        </div>
+        <div id="admin-log" style="margin-top:8px; max-height: 60px; overflow-y: auto; font-size: 12px; color: var(--muted);"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="ad-container" aria-hidden="true">
+    <iframe data-aa="2406373" src="//acceptable.a-ads.com/2406373/?size=Adaptive&background_color=ddd&title_color=b27&title_hover_color=fffefe"></iframe>
   </div>
-</div>
-
-<button id="chatToggleBtn" aria-label="Открыть/закрыть чат">💬</button>
-
-<div id="adBlock" aria-hidden="true" title="Реклама">
-  <iframe data-aa="2406373" src="//acceptable.a-ads.com/2406373/?size=Responsive"></iframe>
 </div>
 
 <script type="module">
@@ -393,480 +343,432 @@
     getDatabase,
     ref,
     set,
-    get,
     push,
-    onValue,
     onChildAdded,
     onChildRemoved,
     query,
     orderByChild,
-    serverTimestamp,
+    onValue,
+    remove,
     onDisconnect
   } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-  import {
-    getStorage,
-    ref as storageRef,
-    uploadBytes,
-    getDownloadURL
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
-  // Firebase config
+  // ----------- Firebase config (замени на свой) --------------
   const firebaseConfig = {
-    apiKey: "AIzaSyDTZrRKHrmKnA9ycBWvt9ephnr7TN6ZFs8",
-    authDomain: "zetgram-d2b77.firebaseapp.com",
-    databaseURL: "https://zetgram-d2b77-default-rtdb.firebaseio.com",
-    projectId: "zetgram-d2b77",
-    storageBucket: "zetgram-d2b77.appspot.com",
-    messagingSenderId: "804686454",
-    appId: "1:804686454:web:db9f618955e3d370deed57",
-    measurementId: "G-KCYSRCX4ZL"
+    apiKey: "ТВОЙ_API_KEY",
+    authDomain: "ТВОЙ_AUTH_DOMAIN",
+    databaseURL: "ТВОЙ_DATABASE_URL",
+    projectId: "ТВОЙ_PROJECT_ID",
+    storageBucket: "ТВОЙ_STORAGE_BUCKET",
+    messagingSenderId: "ТВОЙ_MESSAGING_SENDER_ID",
+    appId: "ТВОЙ_APP_ID"
   };
 
-  // Init Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getDatabase(app);
-  const storage = getStorage(app);
 
-  // DOM refs
-  const userInfo = document.getElementById('userInfo');
-  const usersList = document.getElementById('usersList');
-  const groupsList = document.getElementById('groupsList');
-  const chatWrapper = document.getElementById('chatWrapper');
-  const chatHeader = document.getElementById('chatHeader');
-  const messagesEl = document.getElementById('messages');
-  const textInput = document.getElementById('textInput');
-  const fileInput = document.getElementById('fileInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const chatToggleBtn = document.getElementById('chatToggleBtn');
+  // UI элементы
+  const userInfoEl = document.getElementById('user-info');
+  const usersListEl = document.getElementById('users-list');
+  const groupsListEl = document.getElementById('groups-list');
+  const chatHeaderEl = document.getElementById('chat-header');
+  const chatMessagesEl = document.getElementById('chat-messages');
+  const messageInput = document.getElementById('message-input');
+  const sendBtn = document.getElementById('send-btn');
+  const adminConsole = document.getElementById('admin-console');
+  const adminUserIdInput = document.getElementById('admin-user-id');
+  const btnMute = document.getElementById('btn-mute');
+  const btnBan = document.getElementById('btn-ban');
+  const btnViewAllLS = document.getElementById('btn-view-all-ls');
+  const btnViewNormal = document.getElementById('btn-view-normal');
+  const adminLog = document.getElementById('admin-log');
 
-  // Current chat data
-  let currentChat = null; // { type: 'user'|'group', id: string, name: string }
+  // Состояние
   let currentUser = null;
+  let currentChatId = null; // uid пользователя или group id
+  let isGroupChat = false;
+  let isAdmin = false;
+  let viewAllLS = false;
 
-  // --- Helpers ---
-  function el(tag, cls, txt) {
+  // Пользователи, Группы
+  const users = new Map(); // uid -> {username, online}
+  const groups = new Map(); // groupId -> {name, members}
+
+  // Муты и баны
+  const mutedUsers = new Set();
+  const bannedUsers = new Set();
+
+  // Вспомогательные функции
+  function el(tag, cls, text) {
     const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (txt !== undefined) e.textContent = txt;
+    if(cls) e.className = cls;
+    if(text !== undefined) e.textContent = text;
     return e;
   }
-  function initials(name) {
-    if (!name) return '??';
-    return name.split(' ').map(s => s[0]?.toUpperCase() || '').slice(0, 2).join('');
+  function initials(name){
+    if(!name) return '??';
+    return name.split(' ').map(s=>s[0]?.toUpperCase()||'').slice(0,2).join('');
   }
-  function colorFromString(s) {
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-    const hue = Math.abs(h) % 360;
+  function colorFromString(s){
+    let h=0; for(let i=0;i<s.length;i++) h = (h<<5)-h + s.charCodeAt(i);
+    const hue = Math.abs(h)%360;
     return `hsl(${hue} 80% 35%)`;
   }
-  function timeString(ts) {
+  function timeString(ts){
     const d = new Date(ts);
-    return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  }
-  function scrollToBottom() {
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
   }
 
-  // --- Render user in sidebar ---
-  function renderUser(uid, data) {
-    let el = document.getElementById('user-' + uid);
-    if (!el) {
-      el = el = document.createElement('div');
-      el.className = 'list-item';
-      el.id = 'user-' + uid;
-      el.tabIndex = 0;
+  // Рендер пользователей и групп
+  function renderUser(uid, data){
+    users.set(uid, data);
+    updateUsersList();
+  }
+  function updateUsersList(){
+    usersListEl.innerHTML = '';
+    for(const [uid, data] of users.entries()){
+      if(bannedUsers.has(uid)) continue; // бан — не показываем
+      const item = el('div','item');
+      if(uid === currentUser.uid) item.style.fontWeight = '700';
+      item.dataset.uid = uid;
+      item.dataset.type = 'user';
+      if(uid === currentChatId && !isGroupChat) item.classList.add('selected');
 
-      const av = el('div', 'avatar-circle');
-      av.style.background = colorFromString(data.username || uid);
-      av.textContent = initials(data.username || 'U');
+      const avatar = el('div','avatar', initials(data.username));
+      avatar.style.background = colorFromString(data.username);
+      const name = el('span');
+      name.textContent = data.username + (data.online ? ' (онлайн)' : ' (офлайн)');
 
-      const info = el('div', 'item-info');
-      const name = el('div', 'item-name', data.username || 'Без имени');
-      const status = el('div', 'item-status', data.online ? 'онлайн' : 'не в сети');
+      item.appendChild(avatar);
+      item.appendChild(name);
+      usersListEl.appendChild(item);
+    }
+  }
+  function renderGroup(id, data){
+    groups.set(id, data);
+    updateGroupsList();
+  }
+  function updateGroupsList(){
+    groupsListEl.innerHTML = '';
+    for(const [id, data] of groups.entries()){
+      const item = el('div','item');
+      item.dataset.uid = id;
+      item.dataset.type = 'group';
+      if(id === currentChatId && isGroupChat) item.classList.add('selected');
+      const avatar = el('div','avatar', data.name[0].toUpperCase());
+      avatar.style.background = colorFromString(data.name);
+      const name = el('span');
+      name.textContent = data.name + ` (${data.members.length})`;
+      item.appendChild(avatar);
+      item.appendChild(name);
+      groupsListEl.appendChild(item);
+    }
+  }
 
-      info.appendChild(name);
-      info.appendChild(status);
+  // Обработка выбора пользователя или группы
+  function selectChat(uid, group=false){
+    currentChatId = uid;
+    isGroupChat = group;
+    updateUsersList();
+    updateGroupsList();
+    chatHeaderEl.textContent = group
+      ? `Группа: ${groups.get(uid)?.name || 'Неизвестно'}`
+      : `ЛС: ${users.get(uid)?.username || 'Неизвестно'}`;
+    loadMessages();
+  }
 
-      el.appendChild(av);
-      el.appendChild(info);
+  // Загрузка сообщений из Firebase
+  let unsubscribeMessages = null;
+  function loadMessages(){
+    chatMessagesEl.innerHTML = '';
+    if(unsubscribeMessages) unsubscribeMessages();
 
-      el.addEventListener('click', () => openChat('user', uid, data.username || 'Без имени'));
-      el.addEventListener('keypress', e => { if (e.key === 'Enter') el.click(); });
+    if(!currentChatId) return;
 
-      usersList.appendChild(el);
+    // Определяем путь сообщений:
+    // если isGroupChat - messages/groups/{groupId}
+    // иначе - messages/ls/{user1_user2}, где user1 < user2 по id
+    let messagesPath = '';
+    if(isGroupChat){
+      messagesPath = `messages/groups/${currentChatId}`;
     } else {
-      // Update status and name
-      el.querySelector('.item-name').textContent = data.username || 'Без имени';
-      el.querySelector('.item-status').textContent = data.online ? 'онлайн' : 'не в сети';
-      el.querySelector('.avatar-circle').style.background = colorFromString(data.username || uid);
-      el.querySelector('.avatar-circle').textContent = initials(data.username || 'U');
-    }
-  }
-
-  // --- Render group in sidebar ---
-  function renderGroup(gid, data) {
-    let el = document.getElementById('group-' + gid);
-    if (!el) {
-      el = document.createElement('div');
-      el.className = 'list-item';
-      el.id = 'group-' + gid;
-      el.tabIndex = 0;
-
-      const av = document.createElement('div');
-      av.className = 'avatar-circle';
-      av.style.background = colorFromString(data.name || gid);
-      av.textContent = initials(data.name || 'G');
-
-      const info = document.createElement('div');
-      info.className = 'item-info';
-      const name = document.createElement('div');
-      name.className = 'item-name';
-      name.textContent = data.name || 'Без имени';
-      const status = document.createElement('div');
-      status.className = 'item-status';
-      status.textContent = data.description || 'Группа';
-
-      info.appendChild(name);
-      info.appendChild(status);
-
-      el.appendChild(av);
-      el.appendChild(info);
-
-      el.addEventListener('click', () => openChat('group', gid, data.name || 'Без имени'));
-      el.addEventListener('keypress', e => { if (e.key === 'Enter') el.click(); });
-
-      groupsList.appendChild(el);
-    } else {
-      // Update name or description
-      el.querySelector('.item-name').textContent = data.name || 'Без имени';
-      el.querySelector('.item-status').textContent = data.description || 'Группа';
-      el.querySelector('.avatar-circle').style.background = colorFromString(data.name || gid);
-      el.querySelector('.avatar-circle').textContent = initials(data.name || 'G');
-    }
-  }
-
-  // --- Open chat ---
-  function openChat(type, id, name) {
-    currentChat = { type, id, name };
-    // Highlight active in sidebar
-    document.querySelectorAll('.list-item').forEach(item => item.classList.remove('active'));
-    const sel = (type === 'user' ? '#user-' : '#group-') + id;
-    const activeItem = document.querySelector(sel);
-    if (activeItem) activeItem.classList.add('active');
-
-    chatHeader.textContent = name;
-    chatWrapper.classList.add('show');
-    chatWrapper.classList.remove('hidden');
-    scrollToBottom();
-
-    // Clear messages and load chat
-    messagesEl.innerHTML = '';
-    loadMessages(type, id);
-  }
-
-  // --- Listen for messages ---
-  let messagesListener = null;
-  function loadMessages(type, id) {
-    if (messagesListener) messagesListener(); // off previous listener
-    const chatPath = type === 'user'
-      ? `messages/privateChats/${getPrivateChatId(currentUser.uid, id)}`
-      : `messages/groupChats/${id}`;
-    const chatRef = ref(db, chatPath);
-
-    onValue(chatRef, snapshot => {
-      messagesEl.innerHTML = '';
-      const val = snapshot.val() || {};
-      const msgs = Object.entries(val).sort((a,b) => a[1].timestamp - b[1].timestamp);
-      msgs.forEach(([msgId, msg]) => {
-        addMessageToChat(msg, msgId);
-      });
-      scrollToBottom();
-    });
-  }
-
-  // --- Add message to chat DOM ---
-  function addMessageToChat(msg, id) {
-    const mine = msg.sender === currentUser.uid;
-    const msgEl = el('div', 'message' + (mine ? ' mine' : ''));
-    msgEl.id = 'msg-' + id;
-
-    // Meta (avatar + author + time)
-    const meta = el('div', 'meta');
-    const avatar = el('div', 'avatar-sm');
-    avatar.style.background = colorFromString(msg.senderName || msg.sender);
-    avatar.textContent = initials(msg.senderName || 'U');
-    const author = el('div', 'author', mine ? 'Вы' : msg.senderName || 'Без имени');
-    const time = el('div', 'time', timeString(msg.timestamp || Date.now()));
-    meta.appendChild(avatar);
-    meta.appendChild(author);
-    meta.appendChild(time);
-
-    msgEl.appendChild(meta);
-
-    // Text or image
-    if (msg.text) {
-      const txt = el('div', 'msg-text', msg.text);
-      msgEl.appendChild(txt);
-    }
-    if (msg.imageUrl) {
-      const img = document.createElement('img');
-      img.className = 'msg-img';
-      img.src = msg.imageUrl;
-      img.alt = 'Прикрепленное изображение';
-      msgEl.appendChild(img);
+      const u1 = currentUser.uid;
+      const u2 = currentChatId;
+      const chatKey = u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
+      messagesPath = `messages/ls/${chatKey}`;
     }
 
-    messagesEl.appendChild(msgEl);
-  }
+    const messagesRef = ref(db, messagesPath);
 
-  // --- Compose message and send ---
-  async function sendMessage() {
-    const text = textInput.value.trim();
-    if (!text && !fileInput.files.length) return;
+    unsubscribeMessages = onChildAdded(messagesRef, snapshot=>{
+      const msg = snapshot.val();
+      if(!msg) return;
 
-    const chatPath = currentChat.type === 'user'
-      ? `messages/privateChats/${getPrivateChatId(currentUser.uid, currentChat.id)}`
-      : `messages/groupChats/${currentChat.id}`;
+      // Если пользователь в муте — не выводим его сообщения
+      if(mutedUsers.has(msg.sender)) return;
+      if(bannedUsers.has(msg.sender)) return;
 
-    const chatRef = ref(db, chatPath);
+      // Для админа, если viewAllLS=true — показываем все ЛС, иначе фильтруем
 
-    const newMsgRef = push(chatRef);
-
-    let imageUrl = null;
-    if (fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const fileRef = storageRef(storage, `chatImages/${currentUser.uid}_${Date.now()}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      imageUrl = await getDownloadURL(fileRef);
-      fileInput.value = '';
-    }
-
-    await set(newMsgRef, {
-      sender: currentUser.uid,
-      senderName: currentUser.displayName || currentUser.email,
-      text: text || null,
-      imageUrl: imageUrl,
-      timestamp: Date.now(),
-    });
-
-    textInput.value = '';
-    scrollToBottom();
-  }
-
-  // --- Helpers ---
-  // Private chat ID between two users (sorted by uid)
-  function getPrivateChatId(uid1, uid2) {
-    return [uid1, uid2].sort().join('_');
-  }
-
-  // --- UI for login/registration ---
-
-  async function promptLogin() {
-    const email = prompt("Введите email");
-    if (!email) return;
-    const password = prompt("Введите пароль");
-    if (!password) return;
-
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      // Успех — onAuthStateChanged сработает
-    } catch (err) {
-      if (err.code === 'auth/user-not-found') {
-        // Попытка регистрации
-        if (confirm("Пользователь не найден. Создать новый аккаунт?")) {
-          try {
-            const cred = await createUserWithEmailAndPassword(auth, email, password);
-            // После создания можно задать displayName:
-            const name = prompt("Введите имя для показа в чате") || email.split('@')[0];
-            await updateProfile(cred.user, { displayName: name });
-          } catch(e2) {
-            alert('Ошибка регистрации: ' + e2.message);
-            promptLogin();
-          }
-        } else {
-          promptLogin();
-        }
-      } else {
-        alert('Ошибка входа: ' + err.message);
-        promptLogin();
+      // Для ЛС, если viewAllLS=false, показываем только чат с выбранным
+      if(!isGroupChat && !viewAllLS && msg.sender !== currentChatId && msg.sender !== currentUser.uid) {
+        return; // игнорируем чужие ЛС
       }
-    }
-  }
 
-  // --- Show current user info ---
-  function showUserInfo(user) {
-    userInfo.innerHTML = '';
+      // Для групп — все показываем
 
-    const avatar = el('div', 'avatar-circle');
-    avatar.textContent = initials(user.displayName || user.email);
+      const msgEl = el('div','msg');
+      if(msg.sender === currentUser.uid) msgEl.classList.add('mine');
+      const senderName = users.get(msg.sender)?.username || (isGroupChat ? 'Неизвестно' : 'Пользователь');
+      const meta = el('div','meta', `${senderName} | ${timeString(msg.timestamp)}`);
+      const content = el('div','content');
+      content.textContent = msg.text;
 
-    const name = el('div', null, user.displayName || user.email);
-
-    const logoutBtn = el('button', null, 'Выйти');
-    logoutBtn.id = 'logoutBtn';
-    logoutBtn.onclick = () => signOut(auth);
-
-    const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.alignItems = 'center';
-    wrapper.style.gap = '12px';
-    wrapper.appendChild(avatar);
-    wrapper.appendChild(name);
-    wrapper.appendChild(logoutBtn);
-
-    userInfo.appendChild(wrapper);
-  }
-
-  // --- Load users from DB ---
-  function loadUsers() {
-    const usersRef = ref(db, 'users');
-    onValue(usersRef, snapshot => {
-      const users = snapshot.val() || {};
-      usersList.innerHTML = '';
-      Object.entries(users).forEach(([uid, data]) => {
-        if (uid === currentUser.uid) return; // не показывать себя
-        renderUser(uid, data);
-      });
+      msgEl.appendChild(meta);
+      msgEl.appendChild(content);
+      chatMessagesEl.appendChild(msgEl);
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     });
   }
 
-  // --- Load groups from DB ---
-  function loadGroups() {
-    const groupsRef = ref(db, 'groups');
-    onValue(groupsRef, snapshot => {
-      const groups = snapshot.val() || {};
-      groupsList.innerHTML = '';
-      Object.entries(groups).forEach(([gid, data]) => {
-        renderGroup(gid, data);
-      });
-    });
-  }
-
-  // --- Set user online status ---
-  function setUserOnlineStatus(uid, online) {
-    const statusRef = ref(db, `users/${uid}/online`);
-    set(statusRef, online);
-  }
-
-  // --- Init user presence ---
-  function initUserPresence(uid) {
-    const userStatusRef = ref(db, `users/${uid}/online`);
-    set(userStatusRef, true);
-    onDisconnect(userStatusRef).set(false);
-  }
-
-  // --- Toggle chat panel on small screens ---
-  chatToggleBtn.addEventListener('click', () => {
-    if (chatWrapper.classList.contains('show')) {
-      chatWrapper.classList.remove('show');
-      chatWrapper.classList.add('hidden');
-    } else {
-      chatWrapper.classList.remove('hidden');
-      chatWrapper.classList.add('show');
-      if (!currentChat) {
-        chatHeader.textContent = 'Выберите чат слева';
-        messagesEl.innerHTML = '';
-      }
-    }
-  });
-
-  // --- Send message on button or enter ---
+  // Отправка сообщений
   sendBtn.addEventListener('click', sendMessage);
-  textInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  messageInput.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' && !e.shiftKey){
       e.preventDefault();
       sendMessage();
     }
   });
 
-  // --- On file attach ---
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files.length > 0) {
-      sendMessage();
+  function sendMessage(){
+    const text = messageInput.value.trim();
+    if(!text || !currentChatId) return;
+
+    if(mutedUsers.has(currentUser.uid)){
+      alert('Вы в муте и не можете отправлять сообщения.');
+      return;
     }
-  });
 
-  // --- Auth state listener ---
-  onAuthStateChanged(auth, user => {
-    if (user) {
-      currentUser = user;
-      showUserInfo(user);
+    // Проверка бана
+    if(bannedUsers.has(currentUser.uid)){
+      alert('Вы забанены и не можете писать.');
+      return;
+    }
 
-      // Add user to DB if not exists
-      const userRef = ref(db, 'users/' + user.uid);
-      get(userRef).then(snap => {
-        if (!snap.exists()) {
-          set(userRef, {
-            username: user.displayName || user.email,
-            email: user.email,
-            online: true,
-            createdAt: Date.now()
-          });
-        } else {
-          set(userRef.child('online'), true);
-        }
-      });
-
-      initUserPresence(user.uid);
-
-      loadUsers();
-      loadGroups();
-
-      chatToggleBtn.style.display = 'flex';
-      chatWrapper.classList.remove('hidden');
-
+    // Записываем в Firebase
+    let messagesPath = '';
+    if(isGroupChat){
+      messagesPath = `messages/groups/${currentChatId}`;
     } else {
-      currentUser = null;
-      usersList.innerHTML = '';
-      groupsList.innerHTML = '';
-      messagesEl.innerHTML = '';
-      chatHeader.textContent = 'Войдите, чтобы начать чат';
-      userInfo.innerHTML = '';
-      chatToggleBtn.style.display = 'none';
-      chatWrapper.classList.add('hidden');
-      promptLogin();
+      const u1 = currentUser.uid;
+      const u2 = currentChatId;
+      const chatKey = u1 < u2 ? u1 + '_' + u2 : u2 + '_' + u1;
+      messagesPath = `messages/ls/${chatKey}`;
     }
-  });
+    const messagesRef = ref(db, messagesPath);
+    const newMsgRef = push(messagesRef);
+    set(newMsgRef, {
+      sender: currentUser.uid,
+      text,
+      timestamp: Date.now()
+    });
+    messageInput.value = '';
+  }
 
-  // --- Init ---
-  chatToggleBtn.style.display = 'none';
-  chatWrapper.classList.add('hidden');
+  // Регистрация и вход
+  function renderLogin() {
+    userInfoEl.innerHTML = '';
 
-  // Создаем пару групп для примера (если их нет)
-  async function createExampleGroups() {
-    const groupsRef = ref(db, 'groups');
-    const snapshot = await get(groupsRef);
-    if (!snapshot.exists()) {
-      const group1 = push(groupsRef);
-      const group2 = push(groupsRef);
-      await set(group1, { name: 'Общий чат', description: 'Все пользователи' });
-      await set(group2, { name: 'Разработка', description: 'Обсуждаем проекты' });
+    const container = el('div');
+    const loginForm = el('form');
+    loginForm.innerHTML = `
+      <input type="email" id="login-email" placeholder="Email" required style="padding:6px;margin:4px 0;border-radius:6px;border:none;width: 220px;">
+      <input type="password" id="login-password" placeholder="Пароль" required style="padding:6px;margin:4px 0;border-radius:6px;border:none;width: 220px;">
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button type="submit" style="flex:1; padding:8px; border:none; border-radius:6px; background: var(--accent); color:#fff; font-weight:700; cursor:pointer;">Войти</button>
+        <button type="button" id="to-register" style="flex:1; padding:8px; border:none; border-radius:6px; background:#660000; color:#fff; font-weight:700; cursor:pointer;">Регистрация</button>
+      </div>
+      <div id="login-error" style="color:#ff5555; margin-top:6px;"></div>
+    `;
+    container.appendChild(loginForm);
+    userInfoEl.appendChild(container);
+
+    // Навесим события
+    loginForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const email = loginForm.querySelector('#login-email').value.trim();
+      const pass = loginForm.querySelector('#login-password').value.trim();
+      loginUser(email, pass);
+    });
+
+    container.querySelector('#to-register').onclick = () => {
+      renderRegister();
+    };
+  }
+  function renderRegister() {
+    userInfoEl.innerHTML = '';
+    const container = el('div');
+    const regForm = el('form');
+    regForm.innerHTML = `
+      <input type="email" id="reg-email" placeholder="Email" required style="padding:6px;margin:4px 0;border-radius:6px;border:none;width: 220px;">
+      <input type="text" id="reg-username" placeholder="Никнейм" required style="padding:6px;margin:4px 0;border-radius:6px;border:none;width: 220px;">
+      <input type="password" id="reg-password" placeholder="Пароль" required style="padding:6px;margin:4px 0;border-radius:6px;border:none;width: 220px;">
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button type="submit" style="flex:1; padding:8px; border:none; border-radius:6px; background: var(--accent); color:#fff; font-weight:700; cursor:pointer;">Зарегистрироваться</button>
+        <button type="button" id="to-login" style="flex:1; padding:8px; border:none; border-radius:6px; background:#660000; color:#fff; font-weight:700; cursor:pointer;">Назад</button>
+      </div>
+      <div id="reg-error" style="color:#ff5555; margin-top:6px;"></div>
+    `;
+    container.appendChild(regForm);
+    userInfoEl.appendChild(container);
+
+    regForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      const email = regForm.querySelector('#reg-email').value.trim();
+      const username = regForm.querySelector('#reg-username').value.trim();
+      const pass = regForm.querySelector('#reg-password').value.trim();
+      registerUser(email, pass, username);
+    });
+
+    container.querySelector('#to-login').onclick = () => {
+      renderLogin();
+    };
+  }
+
+  async function registerUser(email, pass, username){
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email, pass);
+      await updateProfile(cred.user, { displayName: username });
+      await set(ref(db, `users/${cred.user.uid}`), {
+        username,
+        online: true,
+        isAdmin: false // по умолчанию никто не админ
+      });
+      currentUser = cred.user;
+      isAdmin = false;
+      startApp();
+    } catch(e){
+      const errEl = document.getElementById('reg-error');
+      errEl.textContent = e.message;
     }
   }
-  createExampleGroups();
+  async function loginUser(email, pass){
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, pass);
+      currentUser = cred.user;
+      // Загрузим isAdmin из БД
+      onValue(ref(db, `users/${currentUser.uid}/isAdmin`), snap=>{
+        isAdmin = !!snap.val();
+        if(isAdmin) adminConsole.style.display = 'flex'; else adminConsole.style.display = 'none';
+      }, {onlyOnce:true});
+      await set(ref(db, `users/${currentUser.uid}/online`), true);
+      startApp();
+    } catch(e){
+      const errEl = document.getElementById('login-error');
+      errEl.textContent = e.message;
+    }
+  }
+
+  function startApp(){
+    userInfoEl.innerHTML = '';
+    const info = el('div');
+    info.textContent = `Вы: ${currentUser.displayName || currentUser.email}`;
+    const logoutBtn = el('button');
+    logoutBtn.textContent = 'Выйти';
+    logoutBtn.onclick = async () => {
+      await set(ref(db, `users/${currentUser.uid}/online`), false);
+      await signOut(auth);
+      location.reload();
+    };
+    info.appendChild(logoutBtn);
+    userInfoEl.appendChild(info);
+
+    loadUsers();
+    loadGroups();
+    selectChat(null);
+  }
+
+  // Слушаем авторизацию
+  onAuthStateChanged(auth, user=>{
+    if(user){
+      currentUser = user;
+      loadUsers();
+      loadGroups();
+      startApp();
+    } else {
+      renderLogin();
+    }
+  });
+
+  // Загрузка списка пользователей из БД
+  function loadUsers(){
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, snapshot=>{
+      const data = snapshot.val() || {};
+      users.clear();
+      for(const uid in data){
+        users.set(uid, data[uid]);
+      }
+      updateUsersList();
+    });
+  }
+  // Пример групп — можно добавить свою логику
+  function loadGroups(){
+    // Пример, 2 группы:
+    groups.clear();
+    groups.set('group1', {name: 'Общий чат', members: Array.from(users.keys())});
+    groups.set('group2', {name: 'Админы', members: Array.from(users.entries()).filter(([uid,u])=>u.isAdmin).map(([uid])=>uid)});
+    updateGroupsList();
+  }
+
+  // Админ функции
+  btnMute.onclick = () => {
+    const target = adminUserIdInput.value.trim();
+    if(!users.has(target)){
+      adminLog.textContent = 'Пользователь не найден';
+      return;
+    }
+    mutedUsers.add(target);
+    adminLog.textContent = `Пользователь ${users.get(target).username} в муте`;
+  };
+  btnBan.onclick = () => {
+    const target = adminUserIdInput.value.trim();
+    if(!users.has(target)){
+      adminLog.textContent = 'Пользователь не найден';
+      return;
+    }
+    bannedUsers.add(target);
+    adminLog.textContent = `Пользователь ${users.get(target).username} забанен`;
+  };
+  btnViewAllLS.onclick = () => {
+    viewAllLS = true;
+    adminLog.textContent = 'Просмотр всех ЛС включен';
+    if(currentChatId) loadMessages();
+  };
+  btnViewNormal.onclick = () => {
+    viewAllLS = false;
+    adminLog.textContent = 'Возврат к обычному чату';
+    if(currentChatId) loadMessages();
+  };
+
+  // Обработка кликов по пользователям и группам
+  usersListEl.addEventListener('click', e=>{
+    const item = e.target.closest('.item');
+    if(!item) return;
+    if(item.dataset.type === 'user'){
+      selectChat(item.dataset.uid, false);
+    }
+  });
+  groupsListEl.addEventListener('click', e=>{
+    const item = e.target.closest('.item');
+    if(!item) return;
+    if(item.dataset.type === 'group'){
+      selectChat(item.dataset.uid, true);
+    }
+  });
 
 </script>
+
 </body>
-    <div id="frame" style="
-  width: 320px;
-  max-width: 90%;
-  margin: 8px auto;
-  background: rgba(0, 0, 0, 0.5);
-  position: relative;
-  z-index: 99998;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 0 8px rgba(0,0,0,0.4);
-">
-  <iframe data-aa="2406373" src="//acceptable.a-ads.com/2406373/?size=320x50&background_color=ddd&title_color=b27&title_hover_color=fffefe"
-    style="border:0; width:100%; height:50px; display:block;"
-    scrolling="no" 
-    allowtransparency="true" 
-    frameborder="0" 
-    marginwidth="0" 
-    marginheight="0">
-  </iframe>
-</div>
 </html>

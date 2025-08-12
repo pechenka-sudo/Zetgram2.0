@@ -643,4 +643,41 @@ textarea{
 
 </script>
 </body>
+  <div id="miniAd" style="
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  width: 160px;
+  height: 90px;
+  background: rgba(179, 0, 0, 0.85);
+  border-radius: 12px;
+  box-shadow: 0 0 8px rgba(179,0,0,0.8);
+  color: white;
+  font-size: 12px;
+  padding: 6px 8px;
+  z-index: 9999;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-family: Arial, sans-serif;
+">
+  <div style="flex:1; overflow:hidden; line-height:1.1; font-weight:600;">
+    🔴 Реклама ZetGram — поддержи проект!
+  </div>
+  <div style="text-align: right;">
+    <button id="closeMiniAd" style="
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      user-select:none;
+    ">×</button>
+  </div>
+</div>
+
 </html>

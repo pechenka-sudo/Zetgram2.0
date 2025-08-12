@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ZetGram — Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ZetGram — Chat с Админкой и Командами</title>
 
 <style>
 :root{
@@ -20,73 +20,51 @@ html,body{height:100%; margin:0; font-family: Inter,Segoe UI,Roboto,Arial; backg
   display:flex; align-items:center; justify-content:space-between;
   padding:12px 16px; background:linear-gradient(90deg,var(--accent),#7e0000);
   box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  user-select:none;
 }
 .header .title{font-weight:700; font-size:18px}
-.header .user-info{display:flex; gap:10px; align-items:center; cursor:pointer}
+.header .user-info{display:flex; gap:10px; align-items:center; cursor:pointer; user-select:none;}
+.header .user-info:hover{opacity:0.8;}
 
-/* main layout */
+/* layout */
 .container{
   flex:1; display:flex; gap:12px; padding:12px;
-  min-height: 0;
 }
+/* sidebar users */
 .sidebar{
-  width:250px; max-width:30%;
+  width:220px; max-width:30%;
   background:var(--panel); border-radius:12px; padding:12px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.4);
   display:flex; flex-direction:column;
-  min-height: 0;
 }
-.sidebar h3{
-  margin:0 0 10px 0; color:var(--accent-2);
-  user-select:none;
-}
-.users-list, .groups-list {
-  overflow-y:auto;
-  flex:1;
-  display:flex; flex-direction:column; gap:8px; padding-right:6px;
-  min-height: 0;
-}
-.user-row, .group-row {
+.sidebar h3{margin:0 0 10px 0; color:var(--accent-2); user-select:none;}
+.users-list{overflow:auto; flex:1; display:flex; flex-direction:column; gap:8px; padding-right:6px;}
+.user-row{
   display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px;
-  cursor:pointer;
-  background: transparent;
-  transition: background-color 0.3s ease;
+  cursor:pointer; transition: background-color 0.2s ease;
 }
-.user-row:hover, .group-row:hover {
-  background: var(--accent);
+.user-row:hover{
+  background:rgba(179,0,0,0.3);
 }
-.user-row.active, .group-row.active {
-  background: var(--accent-2);
-  font-weight: 700;
-}
-.user-row .avatar, .group-row .avatar{
+.user-row .avatar{
   width:40px;height:40px;border-radius:8px; display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;
   user-select:none;
 }
-.user-row .meta, .group-row .meta{
-  display:flex;flex-direction:column;
-  user-select:none;
-}
-.user-row .meta .name, .group-row .meta .name{
-  font-weight:600;
-}
-.user-row .status{
-  font-size:12px; color:var(--muted);
-}
+.user-row .meta{display:flex;flex-direction:column; user-select:none;}
+.user-row .meta .name{font-weight:600}
+.user-row .status{font-size:12px; color:var(--muted)}
 
 /* main chat panel */
 .panel{
   flex:1; display:flex; flex-direction:column; border-radius:12px; background: linear-gradient(180deg,#240606,#2a0f0f);
   padding:10px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
   min-width:320px;
-  min-height: 0;
 }
 
-/* messages */
+/* message area */
 .messages{
-  flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:10px;
+  flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px;
   scroll-behavior:smooth;
-  min-height: 0;
 }
 .message{
   max-width:72%; padding:10px 12px; border-radius:12px; position:relative;
@@ -94,6 +72,12 @@ html,body{height:100%; margin:0; font-family: Inter,Segoe UI,Roboto,Arial; backg
   word-break:break-word; background: #4a0a0a;
 }
 .message.mine{align-self:flex-end; background: linear-gradient(180deg,var(--accent),#8b0000)}
+.message.console{
+  align-self: center; background: linear-gradient(90deg, #660000, #b30000);
+  font-weight: 700; color: #fff;
+  max-width: 90%;
+  text-align: center;
+}
 .message .meta{display:flex; gap:8px; align-items:center; margin-bottom:6px}
 .avatar-sm{width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white}
 .author{font-weight:700; color:var(--accent-2)}
@@ -104,16 +88,15 @@ html,body{height:100%; margin:0; font-family: Inter,Segoe UI,Roboto,Arial; backg
 /* delete button */
 .del-btn{position:absolute; top:6px; right:6px; background:transparent; border:none; color:var(--muted); font-weight:700; cursor:pointer}
 
-/* input area */
+/* input area fixed bottom inside panel */
 .input-bar{
-  display:flex; gap:8px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,0,0,0.06)
+  display:flex; gap:8px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,0,0,0.06);
 }
 .input-field{
   flex:1; display:flex; gap:8px; align-items:center; background:var(--glass); padding:8px; border-radius:10px;
 }
 textarea{
   flex:1; resize:none; padding:8px; border-radius:8px; background:transparent; border:none; color:var(--nice); outline:none; font-size:15px;
-  min-height: 60px;
 }
 .file-btn{
   background:transparent; border:2px dashed rgba(255,255,255,0.06); padding:6px;border-radius:8px; color:var(--muted); cursor:pointer;
@@ -122,587 +105,640 @@ textarea{
   background:linear-gradient(90deg,var(--accent),#ff3b3b); border:none; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700;
 }
 
-/* bottom-right floating button for new chat */
-.new-chat-btn{
+/* Right bottom button to open console or close */
+#consoleToggle {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background: var(--accent-2);
+  background: var(--accent);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 26px;
   color: white;
   border: none;
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 56px;
-  text-align: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255,0,0,0.5);
-  transition: background-color 0.3s ease;
-  z-index: 100000;
+  box-shadow: 0 0 10px var(--accent);
+  z-index: 1100;
 }
-.new-chat-btn:hover {
-  background: #ff4c4c;
-}
-
-/* popup modal background */
-.modal-bg {
+#consolePanel {
   position: fixed;
-  top:0; left:0; width:100%; height:100%;
-  background: rgba(0,0,0,0.7);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 100001;
-}
-
-/* modal window */
-.modal {
+  bottom: 80px;
+  right: 20px;
+  width: 320px;
+  max-height: 400px;
   background: var(--panel);
   border-radius: 12px;
-  padding: 20px;
-  width: 320px;
-  max-width: 90vw;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
+  padding: 12px;
+  display: none;
+  flex-direction: column;
+  z-index: 1100;
   color: var(--nice);
-  box-shadow: 0 0 20px var(--accent-2);
-  user-select:none;
 }
-
-.modal h2 {
-  margin-top: 0;
-  margin-bottom: 16px;
-  color: var(--accent-2);
-  font-weight: 700;
-  text-align: center;
-}
-
-.modal label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 600;
-}
-
-.modal input[type="text"],
-.modal input[type="email"],
-.modal input[type="password"] {
+#consolePanel textarea {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 12px;
-  border-radius: 8px;
-  border: none;
+  height: 100px;
   background: var(--glass);
+  border: none;
+  border-radius: 8px;
   color: var(--nice);
-  outline: none;
-  font-size: 15px;
+  padding: 8px;
+  resize: none;
+  font-family: monospace;
 }
-
-.modal button {
-  width: 100%;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: var(--accent-2);
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  user-select:none;
-}
-
-.modal button:hover {
-  background: #ff4c4c;
-}
-
-/* small text under modal */
-.modal .small-text {
-  font-size: 13px;
-  color: var(--muted);
+#consolePanel button {
   margin-top: 8px;
-  text-align: center;
-  user-select:none;
-}
-
-/* Ad banner bottom right, small */
-#adBanner {
-  position: fixed;
-  bottom: 10px;
-  right: 10px;
-  width: 200px;
-  max-width: 90vw;
-  background: rgba(0,0,0,0.5);
-  border-radius: 8px;
-  z-index: 99999;
-  box-shadow: 0 0 10px var(--accent);
-  user-select:none;
-}
-#adBanner iframe {
-  width: 100%;
-  height: 60px;
+  background: var(--accent);
   border: none;
   border-radius: 8px;
-  display: block;
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  font-weight: 700;
 }
 
-/* Responsive */
-@media(max-width:900px){
+/* Responsive - мобильная адаптация */
+@media(max-width: 768px){
   .container{
     flex-direction: column;
     padding: 8px;
   }
   .sidebar{
-    width: 100%;
-    max-width: none;
-    margin-bottom: 12px;
-    min-height: auto;
+    display: none;
   }
   .panel{
-    min-width: auto;
-    min-height: 400px;
+    min-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
   }
-  .messages {
-    max-height: 50vh;
+  .messages{
+    margin-bottom: 60px; /* чтобы не перекрывало поле ввода */
   }
-  .new-chat-btn {
-    width: 48px;
-    height: 48px;
-    font-size: 28px;
-    line-height: 48px;
-    bottom: 15px;
-    right: 15px;
+  .input-bar{
+    position: fixed;
+    bottom: 0;
+    left: 0; right: 0;
+    background: var(--panel);
+    padding: 8px;
+    box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+    border-top: 1px solid var(--accent);
+    z-index: 1000;
   }
+  .input-field{
+    padding: 8px;
+  }
+  textarea{
+    min-height: 36px;
+    font-size: 16px;
+  }
+  .send-btn{
+    padding: 12px 16px;
+    font-size: 17px;
+    border-radius: 12px;
+  }
+}
+
+/* Стили для выделения забаненных/замученных */
+.banned {
+  opacity: 0.5;
+  pointer-events: none;
 }
 </style>
 </head>
 <body>
-<div class="app" role="application" aria-label="ZetGram chat">
 
+<div class="app" role="application" aria-label="ZetGram чат">
   <div class="header" role="banner">
     <div class="title">ZetGram 🔴</div>
     <div class="user-info" id="headerUser" title="Двойной клик — выйти"></div>
   </div>
 
-  <div class="container" role="main">
-    <nav class="sidebar" aria-label="Пользователи и группы">
+  <div class="container">
+    <div class="sidebar" aria-label="Список пользователей">
       <h3>Пользователи</h3>
-      <div class="users-list" id="usersList" tabindex="0"></div>
-      <h3 style="margin-top: 20px;">Группы</h3>
-      <div class="groups-list" id="groupsList" tabindex="0"></div>
-    </nav>
+      <div class="users-list" id="usersList"></div>
+      <div style="margin-top:8px; text-align:center; color:var(--muted); font-size:13px">Онлайн / В сети</div>
+    </div>
 
-    <section class="panel" aria-live="polite">
-      <div class="messages" id="messages" tabindex="0" aria-label="Чат сообщения"></div>
-
+    <div class="panel" role="main" aria-live="polite">
+      <div class="messages" id="messages"></div>
       <div class="input-bar" role="region" aria-label="Отправка сообщения">
         <div class="input-field">
           <textarea id="textInput" placeholder="Напишите сообщение (Enter — отправить, Shift+Enter — новая строка)"></textarea>
-          <input id="fileInput" class="file-btn" type="file" accept="image/*" title="Прикрепить изображение" />
         </div>
         <button class="send-btn" id="sendBtn" aria-label="Отправить">Отправить</button>
       </div>
-    </section>
-  </div>
-
-  <button class="new-chat-btn" id="newChatBtn" title="Новый чат +">+</button>
-
-  <div id="adBanner" aria-hidden="true">
-    <iframe data-aa="2406373" src="//acceptable.a-ads.com/2406373/?size=Adaptive" referrerpolicy="no-referrer"></iframe>
-  </div>
-
-  <!-- Auth/Register Modal -->
-  <div class="modal-bg" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-    <div class="modal">
-      <h2 id="authTitle">Вход или регистрация</h2>
-
-      <div id="authError" style="color:#ff4c4c; font-weight:bold; margin-bottom: 10px; display:none;"></div>
-
-      <form id="authForm">
-        <label for="nicknameInput">Ник (для регистрации)</label>
-        <input type="text" id="nicknameInput" autocomplete="username" placeholder="Только для регистрации" />
-
-        <label for="emailInput">Email</label>
-        <input type="email" id="emailInput" autocomplete="email" required />
-
-        <label for="passwordInput">Пароль</label>
-        <input type="password" id="passwordInput" autocomplete="current-password" required minlength="6" />
-
-        <button type="submit" id="authSubmitBtn">Войти</button>
-      </form>
-
-      <div class="small-text" id="toggleAuthText">Нет аккаунта? <a href="#" id="toggleAuthLink">Зарегистрироваться</a></div>
     </div>
+  </div>
+
+  <!-- Кнопка для открытия/закрытия консоли -->
+  <button id="consoleToggle" title="Админская консоль" style="display:none;">⚙️</button>
+
+  <!-- Панель консоли -->
+  <div id="consolePanel">
+    <div style="font-weight:700; margin-bottom:8px; color:var(--accent-2)">Админская консоль</div>
+    <textarea id="consoleInput" placeholder="Введите команду: /mute, /ban, /say ..."></textarea>
+    <button id="consoleSend">Отправить</button>
   </div>
 
 </div>
 
+<!-- Firebase SDK (modular) -->
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut,
-  updateProfile
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import {
-  getDatabase,
-  ref,
-  push,
-  onChildAdded,
-  onChildRemoved,
-  query,
-  orderByChild,
-  set,
-  onValue,
-  remove,
-  onDisconnect
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    onAuthStateChanged,
+    signOut,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import {
+    getDatabase,
+    ref,
+    push,
+    onChildAdded,
+    onChildRemoved,
+    query,
+    orderByChild,
+    set,
+    serverTimestamp,
+    onValue,
+    remove,
+    onDisconnect,
+    get
+  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDTZrRKHrmKnA9ycBWvt9ephnr7TN6ZFs8",
-  authDomain: "zetgram-d2b77.firebaseapp.com",
-  databaseURL: "https://zetgram-d2b77-default-rtdb.firebaseio.com",
-  projectId: "zetgram-d2b77",
-  storageBucket: "zetgram-d2b77.firebasestorage.app",
-  messagingSenderId: "804686454",
-  appId: "1:804686454:web:db9f618955e3d370deed57",
-  measurementId: "G-KCYSRCX4ZL"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
-const storage = getStorage(app);
-
-const headerUser = document.getElementById('headerUser');
-const usersListEl = document.getElementById('usersList');
-const groupsListEl = document.getElementById('groupsList');
-const messagesEl = document.getElementById('messages');
-const textInput = document.getElementById('textInput');
-const fileInput = document.getElementById('fileInput');
-const sendBtn = document.getElementById('sendBtn');
-const newChatBtn = document.getElementById('newChatBtn');
-
-const authModal = document.getElementById('authModal');
-const authForm = document.getElementById('authForm');
-const authError = document.getElementById('authError');
-const nicknameInput = document.getElementById('nicknameInput');
-const emailInput = document.getElementById('emailInput');
-const passwordInput = document.getElementById('passwordInput');
-const authSubmitBtn = document.getElementById('authSubmitBtn');
-const toggleAuthText = document.getElementById('toggleAuthText');
-const toggleAuthLink = document.getElementById('toggleAuthLink');
-
-let currentUser = null;
-let currentChatId = null; // uid for private, 'group:<groupId>' for group chats
-let displayedMessages = new Set();
-
-// Группы чатов
-let groups = [
-  { id: 'group1', name: 'Общий чат' },
-  { id: 'admins', name: 'Админская консоль', adminOnly: true }
-];
-
-// Проверка, является ли пользователь админом (здесь по email)
-function isAdmin(user) {
-  if (!user) return false;
-  return user.email === 'kalysmuhamedzanov@gmail.com' && user.displayName === 'pechenka';
-}
-
-// Создание DOM элемента
-function el(tag, cls, txt) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (txt !== undefined) e.textContent = txt;
-  return e;
-}
-
-// Получить инициалы для аватарки
-function initials(name) {
-  if (!name) return '??';
-  return name.split(' ').map(s => s[0]?.toUpperCase() || '').slice(0, 2).join('');
-}
-
-// Генерация цвета из строки
-function colorFromString(s) {
-  let h = 0; for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
-  const hue = Math.abs(h) % 360;
-  return `hsl(${hue} 80% 35%)`;
-}
-
-function timeString(ts) {
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
-// --- Авторизация и присутствие ---
-function setPresence(user) {
-  if (!user) return;
-  const userRef = ref(db, 'users/' + user.uid);
-  set(userRef, { username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: true, lastSeen: Date.now(), uid: user.uid });
-  onDisconnect(userRef).set({ username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: false, lastSeen: Date.now(), uid: user.uid });
-}
-
-function clearPresence(user) {
-  if (!user) return;
-  const userRef = ref(db, 'users/' + user.uid);
-  set(userRef, { username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: false, lastSeen: Date.now(), uid: user.uid });
-}
-
-// --- Загрузка пользователей ---
-function clearUsers() {
-  usersListEl.innerHTML = '';
-}
-function clearGroups() {
-  groupsListEl.innerHTML = '';
-}
-function clearMessages() {
-  messagesEl.innerHTML = '';
-  displayedMessages.clear();
-}
-async function loadUsers() {
-  clearUsers();
-  const usersRef = ref(db, 'users');
-  onValue(usersRef, snapshot => {
-    clearUsers();
-    const val = snapshot.val() || {};
-    const usersArray = Object.values(val).sort((a, b) => {
-      if (a.online === b.online) return (a.username || '').localeCompare(b.username || '');
-      return a.online ? -1 : 1;
-    });
-    usersArray.forEach(u => {
-      if (currentUser && u.uid === currentUser.uid) return; // не показываем себя
-      addUserRow(u);
-    });
-  });
-}
-function addUserRow(user) {
-  const elRow = el('div', 'user-row');
-  elRow.dataset.uid = user.uid;
-  elRow.tabIndex = 0;
-  elRow.onclick = () => {
-    switchChat(user.uid);
+  // --- Конфиг Firebase (замени на свой) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTZrRKHrmKnA9ycBWvt9ephnr7TN6ZFs8",
+    authDomain: "zetgram-d2b77.firebaseapp.com",
+    databaseURL: "https://zetgram-d2b77-default-rtdb.firebaseio.com",
+    projectId: "zetgram-d2b77",
+    storageBucket: "zetgram-d2b77.appspot.com",
+    messagingSenderId: "804686454",
+    appId: "1:804686454:web:db9f618955e3d370deed57",
+    measurementId: "G-KCYSRCX4ZL"
   };
-  elRow.onkeydown = e => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      switchChat(user.uid);
-      e.preventDefault();
-    }
-  };
-  const avatar = el('div', 'avatar', initials(user.username));
-  avatar.style.backgroundColor = colorFromString(user.username);
-  const meta = el('div', 'meta');
-  const name = el('div', 'name', user.username);
-  const status = el('div', 'status', user.online ? '🟢 онлайн' : '⚪ офлайн');
-  meta.append(name, status);
-  elRow.append(avatar, meta);
-  usersListEl.appendChild(elRow);
-}
 
-// Загрузка групп
-async function loadGroups() {
-  clearGroups();
-  groups.forEach(g => {
-    if (g.adminOnly && !isAdmin(currentUser)) return;
-    const elRow = el('div', 'group-row');
-    elRow.dataset.gid = g.id;
-    elRow.tabIndex = 0;
-    elRow.onclick = () => {
-      switchChat('group:' + g.id);
-    };
-    elRow.onkeydown = e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        switchChat('group:' + g.id);
-        e.preventDefault();
-      }
-    };
-    const avatar = el('div', 'avatar', g.name.split(' ').map(s => s[0]).join(''));
-    avatar.style.backgroundColor = '#6b0000';
-    const meta = el('div', 'meta');
-    const name = el('div', 'name', g.name);
-    meta.append(name);
-    elRow.append(avatar, meta);
-    groupsListEl.appendChild(elRow);
-  });
-}
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getDatabase(app);
 
-// Переключение чата
-function switchChat(chatId) {
-  if (currentChatId === chatId) return;
-  currentChatId = chatId;
-  clearMessages();
+  // --- UI ---
+  const messagesEl = document.getElementById('messages');
+  const textInput = document.getElementById('textInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const usersListEl = document.getElementById('usersList');
+  const headerUser = document.getElementById('headerUser');
 
-  Array.from(usersListEl.children).forEach(c => c.classList.toggle('active', c.dataset.uid === chatId));
-  Array.from(groupsListEl.children).forEach(c => c.classList.toggle('active', 'group:' + c.dataset.gid === chatId));
+  const consoleToggle = document.getElementById('consoleToggle');
+  const consolePanel = document.getElementById('consolePanel');
+  const consoleInput = document.getElementById('consoleInput');
+  const consoleSend = document.getElementById('consoleSend');
 
-  listenMessages();
-}
+  // --- Админские ники/емейлы ---
+  // Тебе нужно добавить сюда своих админов
+  // В этом примере админ — nick = "pechenka", email = "kalysmuhamedzanov@gmail.com"
+  const ADMINS = new Set([
+    "pechenka",
+    "kalysmuhamedzanov@gmail.com"
+  ]);
 
-let messagesListener = null;
-function listenMessages() {
-  if (messagesListener) messagesListener();
+  // --- Состояния ---
+  let currentUser = null;
+  let mutedUsers = {}; // uid => timestamp окончания мута
+  let bannedUsers = new Set(); // uid забаненных
+  let onlineUsers = new Map(); // uid -> data
 
-  if (!currentChatId) return;
-
-  const msgsRef = ref(db, 'messages/' + currentChatId);
-  messagesListener = onChildAdded(msgsRef, snapshot => {
-    const msg = snapshot.val();
-    if (displayedMessages.has(snapshot.key)) return;
-    displayedMessages.add(snapshot.key);
-    addMessage(msg, snapshot.key);
-  });
-}
-
-// Добавление сообщения в чат
-function addMessage(msg, msgId) {
-  const mine = currentUser && msg.senderUid === currentUser.uid;
-  const elMsg = el('div', 'message' + (mine ? ' mine' : ''));
-  elMsg.id = 'msg-' + msgId;
-
-  const meta = el('div', 'meta');
-  const avatar = el('div', 'avatar-sm', initials(msg.senderName));
-  avatar.style.backgroundColor = colorFromString(msg.senderName);
-  const author = el('span', 'author', msg.senderName);
-  const time = el('span', 'time', timeString(msg.timestamp));
-
-  meta.append(avatar, author, time);
-  elMsg.appendChild(meta);
-
-  const txt = el('div', 'msg-text');
-  txt.textContent = msg.text || '';
-  elMsg.appendChild(txt);
-
-  if (msg.imageUrl) {
-    const img = document.createElement('img');
-    img.src = msg.imageUrl;
-    img.className = 'msg-img';
-    elMsg.appendChild(img);
+  // --- Вспомогательные функции ---
+  function el(tag, cls, txt){
+    const e = document.createElement(tag);
+    if(cls) e.className = cls;
+    if(txt !== undefined) e.textContent = txt;
+    return e;
+  }
+  function timeString(ts){
+    const d = new Date(ts);
+    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  }
+  function initials(name){
+    if(!name) return '??';
+    return name.split(' ').map(s=>s[0]?.toUpperCase()||'').slice(0,2).join('');
+  }
+  function colorFromString(s){
+    let h=0; for(let i=0;i<s.length;i++) h = (h<<5)-h + s.charCodeAt(i);
+    const hue = Math.abs(h)%360;
+    return `hsl(${hue} 80% 35%)`;
   }
 
-  if (mine) {
-    const delBtn = el('button', 'del-btn', '×');
-    delBtn.title = 'Удалить сообщение';
-    delBtn.onclick = async () => {
-      if (confirm('Удалить сообщение?')) {
-        const msgRef = ref(db, `messages/${currentChatId}/${msgId}`);
-        await remove(msgRef);
-      }
-    };
-    elMsg.appendChild(delBtn);
-  }
+  // --- Рендер пользователей ---
+  function renderUser(uid, data){
+    // не рендерим забаненных вообще в список
+    if(bannedUsers.has(uid)) return;
 
-  messagesEl.appendChild(elMsg);
-  messagesEl.scrollTop = messagesEl.scrollHeight;
-}
-
-// Отправка сообщения
-async function sendMessage() {
-  if (!currentUser) return alert('Сначала войдите в систему');
-  const text = textInput.value.trim();
-  if (!text && !fileInput.files.length) return;
-  sendBtn.disabled = true;
-
-  let imageUrl = null;
-  if (fileInput.files.length) {
-    const file = fileInput.files[0];
-    const imgRef = storageRef(storage, `chat_images/${currentChatId}/${Date.now()}_${file.name}`);
-    await uploadBytes(imgRef, file);
-    imageUrl = await getDownloadURL(imgRef);
-  }
-
-  const msgsRef = ref(db, 'messages/' + currentChatId);
-  await push(msgsRef, {
-    senderUid: currentUser.uid,
-    senderName: currentUser.displayName || currentUser.email.split('@')[0],
-    text: text || '',
-    timestamp: Date.now(),
-    imageUrl
-  });
-
-  textInput.value = '';
-  fileInput.value = '';
-  sendBtn.disabled = false;
-  textInput.focus();
-}
-
-sendBtn.onclick = sendMessage;
-textInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-});
-
-newChatBtn.onclick = () => {
-  currentChatId = null;
-  clearMessages();
-  Array.from(usersListEl.children).forEach(c => c.classList.remove('active'));
-  Array.from(groupsListEl.children).forEach(c => c.classList.remove('active'));
-  textInput.focus();
-};
-
-// --- Авторизация ---
-
-let isRegister = false;
-
-toggleAuthLink.onclick = e => {
-  e.preventDefault();
-  isRegister = !isRegister;
-  authSubmitBtn.textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
-  toggleAuthText.innerHTML = isRegister
-    ? 'Есть аккаунт? <a href="#" id="toggleAuthLink">Войти</a>'
-    : 'Нет аккаунта? <a href="#" id="toggleAuthLink">Зарегистрироваться</a>';
-  document.getElementById('toggleAuthLink').onclick = toggleAuthLink.onclick;
-  nicknameInput.style.display = isRegister ? 'block' : 'none';
-  nicknameInput.value = '';
-};
-
-authForm.onsubmit = async e => {
-  e.preventDefault();
-  authError.style.display = 'none';
-  try {
-    if (isRegister) {
-      if (!nicknameInput.value.trim()) throw new Error('Введите ник для регистрации');
-      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-      await updateProfile(userCred.user, { displayName: nicknameInput.value.trim() });
+    let row = usersListEl.querySelector(`[data-uid="${uid}"]`);
+    if(!row){
+      row = el('div','user-row');
+      row.dataset.uid = uid;
+      row.addEventListener('click', () => openPrivateChat(uid, data.username));
+      const av = el('div','avatar');
+      av.style.background = colorFromString(data.username||uid);
+      av.textContent = initials(data.username||'U');
+      const meta = el('div','meta');
+      const name = el('div','name', data.username||'Без имени');
+      const status = el('div','status', data.online ? 'онлайн' : `последний: ${data.lastSeen ? new Date(data.lastSeen).toLocaleString() : '—'}`);
+      meta.appendChild(name); meta.appendChild(status);
+      row.appendChild(av); row.appendChild(meta);
+      usersListEl.appendChild(row);
     } else {
-      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+      const name = row.querySelector('.meta .name');
+      const status = row.querySelector('.meta .status');
+      if(name) name.textContent = data.username||'Без имени';
+      if(status) status.textContent = data.online ? 'онлайн' : `последний: ${data.lastSeen ? new Date(data.lastSeen).toLocaleString() : '—'}`;
     }
-  } catch (err) {
-    authError.textContent = err.message || 'Ошибка авторизации';
-    authError.style.display = 'block';
   }
-};
 
-// Отслеживание состояния авторизации
-onAuthStateChanged(auth, user => {
-  currentUser = user;
-  if (user) {
-    headerUser.innerHTML = `Вы: <strong>${user.displayName || user.email.split('@')[0]}</strong> — <button id="logoutBtn" aria-label="Выйти">Выйти</button>`;
-    document.getElementById('logoutBtn').onclick = async () => {
-      await signOut(auth);
-      location.reload();
-    };
-    authModal.style.display = 'none';
-    setPresence(user);
-    loadUsers();
-    loadGroups();
-    switchChat('group:group1'); // Открываем общий чат
-  } else {
-    headerUser.textContent = 'Не авторизован';
-    authModal.style.display = 'flex';
-    clearUsers();
-    clearGroups();
-    clearMessages();
+  // --- Открытие приватного чата (ЛС) ---
+  let activeChat = 'general'; // general или uid пользователя для ЛС
+  let activeChatName = 'Общий чат';
+
+  function openPrivateChat(uid, username){
+    if(uid === 'console') return; // нельзя ЛС с консолью
+
+    activeChat = uid;
+    activeChatName = username;
+    messagesEl.innerHTML = ''; // очистить
+    loadMessagesForChat(uid);
+    updateHeaderChat();
   }
-});
+
+  function updateHeaderChat(){
+    headerUser.innerHTML = `<div style="display:flex; align-items:center; gap:8px; user-select:none;">
+      <div style="width:36px; height:36px; border-radius:8px; background:${colorFromString(activeChatName)}; display:flex; align-items:center; justify-content:center; font-weight:700;">
+        ${initials(activeChatName)}
+      </div>
+      <div style="display:flex; flex-direction:column; text-align:right; color:var(--nice); user-select:none;">
+        <div style="font-weight:700;">${activeChatName}</div>
+        <div style="font-size:12px; color:var(--muted); cursor:pointer;" title="Двойной клик — выйти" id="headerUserNameSub">Вы: ${currentUser?.displayName || currentUser?.email.split('@')[0]}</div>
+      </div>
+    </div>
+    <button id="logoutBtn" style="margin-left: 12px; cursor:pointer; background:var(--accent); border:none; padding:6px 10px; border-radius:8px; font-weight:700; color:#fff;">Выйти</button>`;
+
+    // Добавляем обработчик кнопки выхода
+    document.getElementById('logoutBtn').onclick = () => {
+      signOut(auth);
+    };
+  }
+
+  // --- Загрузка сообщений ---
+  let messagesRef = null;
+  let messagesListener = null;
+
+  function chatPath(uid) {
+    // общий чат — 'chats/general'
+    // лс — 'chats/private/{uid1}_{uid2}' (отсортированы)
+    if(uid === 'general') return 'chats/general';
+
+    // Чтобы не было разных ключей для пары, отсортируем uids
+    let uids = [currentUser.uid, uid].sort();
+    return `chats/private/${uids[0]}_${uids[1]}`;
+  }
+
+  function loadMessagesForChat(uid){
+    if(messagesListener){
+      messagesListener();
+      messagesListener = null;
+    }
+    messagesEl.innerHTML = '';
+
+    messagesRef = ref(db, chatPath(uid));
+
+    // слушаем новые сообщения
+    const q = query(messagesRef, orderByChild('timestamp'));
+    messagesListener = onChildAdded(q, snapshot => {
+      const msg = snapshot.val();
+      if(!msg) return;
+
+      if(isUserBanned(msg.uid)) return; // бан - не показываем сообщения
+
+      // Если пользователь замучен и это он пишет — скрываем сообщение
+      if(isUserMuted(msg.uid)) return;
+
+      // Показ сообщения
+      renderMessage(msg);
+      // Скролл вниз
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    });
+  }
+
+  // --- Проверка бан/мут ---
+  function isUserMuted(uid){
+    if(!mutedUsers[uid]) return false;
+    const endTs = mutedUsers[uid];
+    return (Date.now() < endTs);
+  }
+  function isUserBanned(uid){
+    return bannedUsers.has(uid);
+  }
+
+  // --- Отрисовка сообщения ---
+  function renderMessage(msg){
+    const mine = (msg.uid === currentUser.uid);
+    const div = el('div','message');
+    if(mine) div.classList.add('mine');
+    if(msg.fromConsole) div.classList.add('console');
+
+    const meta = el('div','meta');
+    const avatar = el('div','avatar-sm');
+    avatar.style.background = colorFromString(msg.username||msg.uid);
+    avatar.textContent = initials(msg.username||msg.uid);
+    const author = el('div','author', msg.fromConsole ? "[console]" : (msg.username || "Без имени"));
+    const time = el('div','time', timeString(msg.timestamp));
+
+    meta.appendChild(avatar);
+    meta.appendChild(author);
+    meta.appendChild(time);
+
+    const text = el('div','msg-text');
+    text.innerHTML = escapeHtml(msg.text).replace(/\n/g,'<br>');
+
+    div.appendChild(meta);
+    div.appendChild(text);
+
+    // Кнопка удалить для своих сообщений
+    if(mine && !msg.fromConsole){
+      const del = el('button','del-btn','×');
+      del.title = "Удалить сообщение";
+      del.onclick = () => {
+        remove(ref(db, chatPath(activeChat) + '/' + msg.key));
+      };
+      div.appendChild(del);
+    }
+
+    messagesEl.appendChild(div);
+  }
+
+  // --- Escape HTML ---
+  function escapeHtml(text){
+    if(!text) return '';
+    return text.replace(/[&<>"']/g, function(m){
+      return {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[m];
+    });
+  }
+
+  // --- Отправка сообщений ---
+  async function sendMessage(text){
+    text = text.trim();
+    if(!text) return;
+
+    // Проверки бан/мут
+    if(isUserBanned(currentUser.uid)){
+      alert('Вы забанены и не можете писать в чат.');
+      return;
+    }
+    if(isUserMuted(currentUser.uid)){
+      alert('Вы замучены и не можете писать в чат.');
+      return;
+    }
+
+    // Проверка команд (только для админов)
+    if(text.startsWith('/') && isAdmin()){
+      await handleCommand(text);
+      textInput.value = '';
+      return;
+    }
+
+    const msgObj = {
+      uid: currentUser.uid,
+      username: currentUser.displayName || currentUser.email.split('@')[0],
+      text,
+      timestamp: Date.now(),
+      fromConsole: false,
+    };
+    const newRef = push(ref(db, chatPath(activeChat)));
+    msgObj.key = newRef.key;
+    await set(newRef, msgObj);
+
+    textInput.value = '';
+  }
+
+  // --- Обработка команд ---
+  async function handleCommand(text){
+    const parts = text.trim().split(' ');
+    const cmd = parts[0].toLowerCase();
+    const args = parts.slice(1);
+
+    if(cmd === '/mute'){
+      if(args.length < 2){
+        sendConsoleMessage('Использование: /mute <ник> <время_в_минутах>');
+        return;
+      }
+      const [nick, timeStr] = args;
+      const timeMin = parseInt(timeStr);
+      if(isNaN(timeMin) || timeMin <= 0){
+        sendConsoleMessage('Неверное время мута');
+        return;
+      }
+      const userToMute = findUserByNick(nick);
+      if(!userToMute){
+        sendConsoleMessage(`Пользователь "${nick}" не найден`);
+        return;
+      }
+      mutedUsers[userToMute.uid] = Date.now() + timeMin*60*1000;
+      sendConsoleMessage(`Пользователь "${nick}" замучен на ${timeMin} минут.`);
+    } else if(cmd === '/ban'){
+      if(args.length < 1){
+        sendConsoleMessage('Использование: /ban <ник>');
+        return;
+      }
+      const nick = args[0];
+      const userToBan = findUserByNick(nick);
+      if(!userToBan){
+        sendConsoleMessage(`Пользователь "${nick}" не найден`);
+        return;
+      }
+      bannedUsers.add(userToBan.uid);
+      // Можно дополнительно удалять из онлайн и из базы, если нужно
+      sendConsoleMessage(`Пользователь "${nick}" забанен.`);
+      // Удаляем из пользователей, чтобы не показывался в списке
+      remove(ref(db, 'users/' + userToBan.uid));
+    } else if(cmd === '/say'){
+      if(args.length < 1){
+        sendConsoleMessage('Использование: /say <сообщение>');
+        return;
+      }
+      const sayText = args.join(' ');
+      // Пишем сообщение от консоли в общий чат
+      const msgObj = {
+        uid: 'console',
+        username: '[console]',
+        text: sayText,
+        timestamp: Date.now(),
+        fromConsole: true,
+      };
+      const newRef = push(ref(db, 'chats/general'));
+      msgObj.key = newRef.key;
+      await set(newRef, msgObj);
+    } else {
+      sendConsoleMessage(`Неизвестная команда: ${cmd}`);
+    }
+  }
+
+  // --- Найти пользователя по нику ---
+  function findUserByNick(nick){
+    for(let [uid, data] of onlineUsers.entries()){
+      if(data.username && data.username.toLowerCase() === nick.toLowerCase()){
+        return {uid, ...data};
+      }
+    }
+    return null;
+  }
+
+  // --- Отправка сообщения от консоли (видно всем) ---
+  async function sendConsoleMessage(text){
+    const msgObj = {
+      uid: 'console',
+      username: '[console]',
+      text,
+      timestamp: Date.now(),
+      fromConsole: true,
+    };
+    const newRef = push(ref(db, 'chats/general'));
+    msgObj.key = newRef.key;
+    await set(newRef, msgObj);
+  }
+
+  // --- Проверка админа ---
+  function isAdmin(){
+    if(!currentUser) return false;
+    const nick = currentUser.displayName || currentUser.email.split('@')[0];
+    if(ADMINS.has(nick.toLowerCase()) || ADMINS.has(currentUser.email.toLowerCase())) return true;
+    return false;
+  }
+
+  // --- Отображаем список пользователей из БД ---
+  function updateUsersList(usersData){
+    usersListEl.innerHTML = '';
+    for(let [uid, data] of Object.entries(usersData || {})){
+      onlineUsers.set(uid, data);
+      renderUser(uid, data);
+    }
+  }
+
+  // --- Авторизация и регистрация через prompt ---
+  async function loginFlow(){
+    while(true){
+      let email = prompt('Введите email для входа или регистрации:');
+      if(!email) return alert('Вход отменён');
+      let pass = prompt('Введите пароль:');
+      if(!pass) return alert('Вход отменён');
+
+      try {
+        await signInWithEmailAndPassword(auth, email, pass);
+        break;
+      } catch (e) {
+        if(e.code === 'auth/user-not-found'){
+          // создаём нового пользователя
+          try {
+            await createUserWithEmailAndPassword(auth, email, pass);
+            // обновим displayName — запросим ник
+            let nick = prompt('Регистрация успешна! Введите ваш ник для отображения:');
+            if(nick && auth.currentUser){
+              await updateProfile(auth.currentUser, {displayName: nick});
+            }
+            break;
+          } catch (e2) {
+            alert('Ошибка регистрации: '+e2.message);
+          }
+        } else {
+          alert('Ошибка входа: '+e.message);
+        }
+      }
+    }
+  }
+
+  // --- Обновление данных текущего пользователя в users ---
+  async function updateCurrentUserOnline(){
+    if(!currentUser) return;
+    const userRef = ref(db, 'users/' + currentUser.uid);
+    await set(userRef, {
+      username: currentUser.displayName || currentUser.email.split('@')[0],
+      email: currentUser.email,
+      online: true,
+      lastSeen: Date.now()
+    });
+    // Автоматически убрать при отключении
+    onDisconnect(userRef).remove();
+  }
+
+  // --- Слушаем изменения в users ---
+  function listenUsers(){
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, snapshot => {
+      updateUsersList(snapshot.val());
+    });
+  }
+
+  // --- Обработчики UI ---
+  sendBtn.onclick = () => sendMessage(textInput.value);
+  textInput.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      sendMessage(textInput.value);
+    }
+  });
+
+  consoleToggle.onclick = () => {
+    if(consolePanel.style.display === 'flex'){
+      consolePanel.style.display = 'none';
+    } else {
+      consolePanel.style.display = 'flex';
+      consoleInput.focus();
+    }
+  };
+  consoleSend.onclick = async () => {
+    if(!consoleInput.value.trim()) return;
+    await handleCommand(consoleInput.value);
+    consoleInput.value = '';
+  };
+
+  // --- Основной flow ---
+
+  onAuthStateChanged(auth, async user => {
+    if(user){
+      currentUser = user;
+      await updateCurrentUserOnline();
+
+      // Показываем админскую кнопку, если админ
+      if(isAdmin()){
+        consoleToggle.style.display = 'block';
+      } else {
+        consoleToggle.style.display = 'none';
+      }
+
+      // Загрузить общий чат сразу
+      openPrivateChat('general', 'Общий чат');
+
+      listenUsers();
+
+      updateHeaderChat();
+    } else {
+      currentUser = null;
+      consoleToggle.style.display = 'none';
+      // Запускаем логин
+      await loginFlow();
+    }
+  });
+
 </script>
 
 </body>

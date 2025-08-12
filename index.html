@@ -1,277 +1,305 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ZetGram — Chat с Админкой и Командами</title>
-
+<title>ZetGram v2 — Чат с Группами и ЛС</title>
 <style>
-:root{
-  --bg:#1a0000; --panel:#2a0f0f; --accent:#b30000; --accent-2:#ff4c4c; --muted:#ff9999;
-  --glass: rgba(255,255,255,0.03);
-  --nice: #ffefef;
-}
-*{box-sizing:border-box}
-html,body{height:100%; margin:0; font-family: Inter,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--nice); -webkit-font-smoothing:antialiased}
-.app{
-  height:100vh; display:flex; flex-direction:column;
-}
-.header{
-  display:flex; align-items:center; justify-content:space-between;
-  padding:12px 16px; background:linear-gradient(90deg,var(--accent),#7e0000);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-  user-select:none;
-}
-.header .title{font-weight:700; font-size:18px}
-.header .user-info{display:flex; gap:10px; align-items:center; cursor:pointer; user-select:none;}
-.header .user-info:hover{opacity:0.8;}
-
-/* layout */
-.container{
-  flex:1; display:flex; gap:12px; padding:12px;
-}
-/* sidebar users */
-.sidebar{
-  width:220px; max-width:30%;
-  background:var(--panel); border-radius:12px; padding:12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-  display:flex; flex-direction:column;
-}
-.sidebar h3{margin:0 0 10px 0; color:var(--accent-2); user-select:none;}
-.users-list{overflow:auto; flex:1; display:flex; flex-direction:column; gap:8px; padding-right:6px;}
-.user-row{
-  display:flex; gap:8px; align-items:center; padding:8px; border-radius:8px;
-  cursor:pointer; transition: background-color 0.2s ease;
-}
-.user-row:hover{
-  background:rgba(179,0,0,0.3);
-}
-.user-row .avatar{
-  width:40px;height:40px;border-radius:8px; display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;
-  user-select:none;
-}
-.user-row .meta{display:flex;flex-direction:column; user-select:none;}
-.user-row .meta .name{font-weight:600}
-.user-row .status{font-size:12px; color:var(--muted)}
-
-/* main chat panel */
-.panel{
-  flex:1; display:flex; flex-direction:column; border-radius:12px; background: linear-gradient(180deg,#240606,#2a0f0f);
-  padding:10px; box-shadow: 0 8px 30px rgba(0,0,0,0.6);
-  min-width:320px;
-}
-
-/* message area */
-.messages{
-  flex:1; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:10px;
-  scroll-behavior:smooth;
-}
-.message{
-  max-width:72%; padding:10px 12px; border-radius:12px; position:relative;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-  word-break:break-word; background: #4a0a0a;
-}
-.message.mine{align-self:flex-end; background: linear-gradient(180deg,var(--accent),#8b0000)}
-.message.console{
-  align-self: center; background: linear-gradient(90deg, #660000, #b30000);
-  font-weight: 700; color: #fff;
-  max-width: 90%;
-  text-align: center;
-}
-.message .meta{display:flex; gap:8px; align-items:center; margin-bottom:6px}
-.avatar-sm{width:36px;height:36px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-weight:700;color:white}
-.author{font-weight:700; color:var(--accent-2)}
-.time{font-size:12px;color:var(--muted); margin-left:6px}
-.msg-text{font-size:15px; margin-bottom:6px}
-.msg-img{display:block; max-width:320px; border-radius:8px; margin-top:6px; box-shadow: 0 6px 16px rgba(0,0,0,0.5)}
-
-/* delete button */
-.del-btn{position:absolute; top:6px; right:6px; background:transparent; border:none; color:var(--muted); font-weight:700; cursor:pointer}
-
-/* input area fixed bottom inside panel */
-.input-bar{
-  display:flex; gap:8px; align-items:center; margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,0,0,0.06);
-}
-.input-field{
-  flex:1; display:flex; gap:8px; align-items:center; background:var(--glass); padding:8px; border-radius:10px;
-}
-textarea{
-  flex:1; resize:none; padding:8px; border-radius:8px; background:transparent; border:none; color:var(--nice); outline:none; font-size:15px;
-}
-.file-btn{
-  background:transparent; border:2px dashed rgba(255,255,255,0.06); padding:6px;border-radius:8px; color:var(--muted); cursor:pointer;
-}
-.send-btn{
-  background:linear-gradient(90deg,var(--accent),#ff3b3b); border:none; color:white; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700;
-}
-
-/* Right bottom button to open console or close */
-#consoleToggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--accent);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 26px;
-  color: white;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 0 10px var(--accent);
-  z-index: 1100;
-}
-#consolePanel {
-  position: fixed;
-  bottom: 80px;
-  right: 20px;
-  width: 320px;
-  max-height: 400px;
-  background: var(--panel);
-  border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
-  padding: 12px;
-  display: none;
-  flex-direction: column;
-  z-index: 1100;
-  color: var(--nice);
-}
-#consolePanel textarea {
-  width: 100%;
-  height: 100px;
-  background: var(--glass);
-  border: none;
-  border-radius: 8px;
-  color: var(--nice);
-  padding: 8px;
-  resize: none;
-  font-family: monospace;
-}
-#consolePanel button {
-  margin-top: 8px;
-  background: var(--accent);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  padding: 8px;
-  cursor: pointer;
-  font-weight: 700;
-}
-
-/* Responsive - мобильная адаптация */
-@media(max-width: 768px){
-  .container{
+  /* Базовые стили */
+  body,html {
+    margin:0; padding:0; height:100%; font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #330000 0%, #110000 100%);
+    color: #eee;
+    display: flex;
     flex-direction: column;
-    padding: 8px;
   }
-  .sidebar{
-    display: none;
+  #app {
+    flex: 1; display: flex; flex-direction: row; height: 100vh; min-height: 500px;
+    max-width: 1200px; margin: auto; border-radius: 10px; overflow: hidden;
+    box-shadow: 0 0 30px rgba(255,0,0,0.7);
+    background: #220000;
   }
-  .panel{
-    min-width: 100%;
-    border-radius: 0;
-    box-shadow: none;
+  /* Сайдбар с пользователями и группами */
+  #sidebar {
+    width: 280px; background: #2a0a0a; display: flex; flex-direction: column;
+    padding: 12px; box-sizing: border-box;
   }
-  .messages{
-    margin-bottom: 60px; /* чтобы не перекрывало поле ввода */
+  #sidebar h2 {
+    margin-top:0; margin-bottom:12px; color: #ff4c4c;
+    user-select:none;
+    font-weight: 700;
   }
-  .input-bar{
-    position: fixed;
-    bottom: 0;
-    left: 0; right: 0;
-    background: var(--panel);
-    padding: 8px;
-    box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
-    border-top: 1px solid var(--accent);
-    z-index: 1000;
+  #groupsList, #usersList {
+    flex: 1; overflow-y: auto; margin-bottom: 16px;
+    background: #3a1010; border-radius: 8px; padding: 8px;
+    box-sizing: border-box;
   }
-  .input-field{
-    padding: 8px;
-  }
-  textarea{
-    min-height: 36px;
+  .list-title {
+    font-weight: 600; color: #f55;
+    margin-bottom: 8px; user-select:none;
     font-size: 16px;
   }
-  .send-btn{
-    padding: 12px 16px;
-    font-size: 17px;
-    border-radius: 12px;
+  .item {
+    padding: 8px; margin-bottom: 6px;
+    background: #440000;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select:none;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-}
-
-/* Стили для выделения забаненных/замученных */
-.banned {
-  opacity: 0.5;
-  pointer-events: none;
-}
+  .item:hover, .item.active {
+    background: #b33;
+  }
+  .item .avatar {
+    width: 36px; height: 36px; background: #660000;
+    border-radius: 6px;
+    font-weight: 700; color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  /* Основная панель с сообщениями */
+  #chatPanel {
+    flex: 1; display: flex; flex-direction: column;
+    background: #330000;
+  }
+  #chatHeader {
+    padding: 14px 20px; background: #440000;
+    font-weight: 700; font-size: 18px; color: #ff4c4c;
+    user-select:none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #chatMessages {
+    flex: 1; overflow-y: auto;
+    padding: 20px; box-sizing: border-box;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .message {
+    max-width: 70%;
+    background: #550000;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    word-break: break-word;
+    position: relative;
+    font-size: 15px;
+  }
+  .message.mine {
+    background: linear-gradient(90deg, #ff2f2f, #8b0000);
+    align-self: flex-end;
+  }
+  .message.console {
+    background: #a00000;
+    align-self: center;
+    font-weight: 700;
+    color: #fff;
+    max-width: 90%;
+    text-align: center;
+  }
+  .message .meta {
+    font-size: 13px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .avatar-sm {
+    width: 32px; height: 32px; background: #660000;
+    border-radius: 6px;
+    font-weight: 700; color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  /* Ввод сообщения */
+  #messageInputBar {
+    display: flex;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #440000;
+    box-sizing: border-box;
+  }
+  #messageInput {
+    flex: 1;
+    border-radius: 8px;
+    border: none;
+    padding: 10px 14px;
+    font-size: 15px;
+    resize: none;
+    background: #550000;
+    color: #eee;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  }
+  #sendBtn {
+    background: linear-gradient(90deg, #ff2f2f, #8b0000);
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 700;
+    color: white;
+    cursor: pointer;
+    user-select:none;
+    transition: background-color 0.3s;
+  }
+  #sendBtn:hover {
+    background: #b30000;
+  }
+  /* Кнопка консоли */
+  #consoleToggleBtn {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    background: #b30000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 50px; height: 50px;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 0 15px #b30000;
+    user-select:none;
+    display: none;
+    z-index: 9999;
+  }
+  /* Панель консоли */
+  #consolePanel {
+    position: fixed;
+    right: 20px;
+    bottom: 80px;
+    width: 350px;
+    max-height: 450px;
+    background: #2a0a0a;
+    border-radius: 10px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    box-shadow: 0 0 30px #b30000;
+    color: #eee;
+    display: none;
+    flex-direction: column;
+    z-index: 10000;
+  }
+  #consolePanel textarea {
+    flex: 1;
+    resize: none;
+    border-radius: 8px;
+    border: none;
+    background: #440000;
+    color: #eee;
+    font-family: monospace;
+    padding: 10px;
+    font-size: 14px;
+  }
+  #consoleSendBtn {
+    margin-top: 10px;
+    background: #b30000;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 10px;
+    user-select:none;
+  }
+  /* Адаптив */
+  @media(max-width: 768px){
+    #app {
+      flex-direction: column;
+      height: 100vh;
+      max-width: 100%;
+    }
+    #sidebar {
+      width: 100%;
+      height: 140px;
+      display: flex;
+      flex-direction: row;
+      overflow-x: auto;
+      padding: 8px 12px;
+    }
+    #groupsList, #usersList {
+      flex: none;
+      margin-bottom: 0;
+      margin-right: 12px;
+      padding: 6px 8px;
+      background: #3a1010;
+      border-radius: 8px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      min-width: 120px;
+    }
+    #chatPanel {
+      flex: 1;
+      min-height: 0;
+    }
+    #chatMessages {
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+    #messageInputBar {
+      padding: 10px 14px;
+    }
+    #messageInput {
+      font-size: 16px;
+      padding: 8px 12px;
+    }
+    #sendBtn {
+      padding: 10px 18px;
+      font-size: 16px;
+    }
+  }
 </style>
 </head>
 <body>
 
-<div class="app" role="application" aria-label="ZetGram чат">
-  <div class="header" role="banner">
-    <div class="title">ZetGram 🔴</div>
-    <div class="user-info" id="headerUser" title="Двойной клик — выйти"></div>
-  </div>
+<div id="app" role="main" aria-label="ZetGram чат приложение">
 
-  <div class="container">
-    <div class="sidebar" aria-label="Список пользователей">
-      <h3>Пользователи</h3>
-      <div class="users-list" id="usersList"></div>
-      <div style="margin-top:8px; text-align:center; color:var(--muted); font-size:13px">Онлайн / В сети</div>
-    </div>
+  <aside id="sidebar" aria-label="Сайдбар с пользователями и группами">
+    <h2>Группы</h2>
+    <div id="groupsList" role="list" aria-label="Список групп"></div>
 
-    <div class="panel" role="main" aria-live="polite">
-      <div class="messages" id="messages"></div>
-      <div class="input-bar" role="region" aria-label="Отправка сообщения">
-        <div class="input-field">
-          <textarea id="textInput" placeholder="Напишите сообщение (Enter — отправить, Shift+Enter — новая строка)"></textarea>
-        </div>
-        <button class="send-btn" id="sendBtn" aria-label="Отправить">Отправить</button>
+    <h2>Пользователи</h2>
+    <div id="usersList" role="list" aria-label="Список пользователей"></div>
+  </aside>
+
+  <section id="chatPanel" aria-live="polite" aria-atomic="false" aria-relevant="additions">
+    <header id="chatHeader" role="banner">
+      <span id="chatTitle">Общий чат</span>
+      <button id="logoutBtn" aria-label="Выйти из аккаунта">Выйти</button>
+    </header>
+
+    <main id="chatMessages" role="log" aria-live="polite" aria-relevant="additions"></main>
+
+    <form id="messageForm" aria-label="Форма отправки сообщения" autocomplete="off">
+      <div id="messageInputBar">
+        <textarea id="messageInput" placeholder="Введите сообщение..." rows="2" required aria-required="true" aria-label="Текст сообщения"></textarea>
+        <button id="sendBtn" type="submit" aria-label="Отправить сообщение">Отправить</button>
       </div>
-    </div>
-  </div>
-
-  <!-- Кнопка для открытия/закрытия консоли -->
-  <button id="consoleToggle" title="Админская консоль" style="display:none;">⚙️</button>
-
-  <!-- Панель консоли -->
-  <div id="consolePanel">
-    <div style="font-weight:700; margin-bottom:8px; color:var(--accent-2)">Админская консоль</div>
-    <textarea id="consoleInput" placeholder="Введите команду: /mute, /ban, /say ..."></textarea>
-    <button id="consoleSend">Отправить</button>
-  </div>
+    </form>
+  </section>
 
 </div>
 
-<!-- Firebase SDK (modular) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    signOut,
-    updateProfile
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-  import {
-    getDatabase,
-    ref,
-    push,
-    onChildAdded,
-    onChildRemoved,
-    query,
-    orderByChild,
-    set,
-    serverTimestamp,
-    onValue,
-    remove,
-    onDisconnect,
-    get
-  } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+<button id="consoleToggleBtn" title="Админская консоль" aria-haspopup="dialog" aria-controls="consolePanel">⚙️</button>
 
-  // --- Конфиг Firebase (замени на свой) ---
+<div id="consolePanel" role="dialog" aria-modal="true" aria-labelledby="consoleTitle" tabindex="-1">
+  <h3 id="consoleTitle" style="color:#ff4c4c; margin-top:0;">Админская консоль</h3>
+  <textarea id="consoleInput" placeholder="Введите команду: /mute, /ban, /say..."></textarea>
+  <button id="consoleSendBtn" aria-label="Отправить команду">Отправить</button>
+</div>
+
+<script type="module">
+
+  // Импорты Firebase из CDN (modular SDK)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+  import { getDatabase, ref, push, onChildAdded, onValue, set, query, orderByChild, remove, onDisconnect, get } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
+
+  // Ваш firebaseConfig (замените на свой)
   const firebaseConfig = {
     apiKey: "AIzaSyDTZrRKHrmKnA9ycBWvt9ephnr7TN6ZFs8",
     authDomain: "zetgram-d2b77.firebaseapp.com",
@@ -287,31 +315,35 @@ textarea{
   const auth = getAuth(app);
   const db = getDatabase(app);
 
-  // --- UI ---
-  const messagesEl = document.getElementById('messages');
-  const textInput = document.getElementById('textInput');
-  const sendBtn = document.getElementById('sendBtn');
-  const usersListEl = document.getElementById('usersList');
-  const headerUser = document.getElementById('headerUser');
+  // UI элементы
+  const groupsListEl = document.getElementById("groupsList");
+  const usersListEl = document.getElementById("usersList");
+  const chatMessagesEl = document.getElementById("chatMessages");
+  const chatTitleEl = document.getElementById("chatTitle");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const messageForm = document.getElementById("messageForm");
+  const messageInput = document.getElementById("messageInput");
+  const sendBtn = document.getElementById("sendBtn");
 
-  const consoleToggle = document.getElementById('consoleToggle');
-  const consolePanel = document.getElementById('consolePanel');
-  const consoleInput = document.getElementById('consoleInput');
-  const consoleSend = document.getElementById('consoleSend');
+  const consoleToggleBtn = document.getElementById("consoleToggleBtn");
+  const consolePanel = document.getElementById("consolePanel");
+  const consoleInput = document.getElementById("consoleInput");
+  const consoleSendBtn = document.getElementById("consoleSendBtn");
 
-  // --- Админские ники/емейлы ---
-  // Тебе нужно добавить сюда своих админов
-  // В этом примере админ — nick = "pechenka", email = "kalysmuhamedzanov@gmail.com"
-  const ADMINS = new Set([
-    "pechenka",
-    "kalysmuhamedzanov@gmail.com"
-  ]);
+  // Админские ники/емейлы
+  // Добавьте сюда нужных админов (никнеймы и email в нижнем регистре)
+  const ADMINS = new Set(["pechenka", "kalysmuhamedzanov@gmail.com"]);
 
-  // --- Состояния ---
+  // Переменные состояния
   let currentUser = null;
-  let mutedUsers = {}; // uid => timestamp окончания мута
+  let activeChat = "general"; // 'general' или uid пользователя или id группы
+  let activeChatName = "Общий чат";
+
+  let mutedUsers = {}; // uid: timestamp окончания мута
   let bannedUsers = new Set(); // uid забаненных
-  let onlineUsers = new Map(); // uid -> data
+
+  let usersData = {}; // uid -> данные пользователя
+  let groupsData = {}; // id группы -> данные группы
 
   // --- Вспомогательные функции ---
   function el(tag, cls, txt){
@@ -320,206 +352,160 @@ textarea{
     if(txt !== undefined) e.textContent = txt;
     return e;
   }
-  function timeString(ts){
-    const d = new Date(ts);
-    return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-  }
   function initials(name){
-    if(!name) return '??';
-    return name.split(' ').map(s=>s[0]?.toUpperCase()||'').slice(0,2).join('');
+    if(!name) return "??";
+    return name.trim().split(" ").map(w=>w[0].toUpperCase()).slice(0,2).join("");
   }
   function colorFromString(s){
-    let h=0; for(let i=0;i<s.length;i++) h = (h<<5)-h + s.charCodeAt(i);
-    const hue = Math.abs(h)%360;
-    return `hsl(${hue} 80% 35%)`;
+    let hash = 0;
+    for(let i=0; i<s.length; i++){
+      hash = s.charCodeAt(i) + ((hash << 5) - hash);
+      hash = hash & hash;
+    }
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 40%)`;
+  }
+  function formatTime(ts){
+    const d = new Date(ts);
+    return d.toLocaleTimeString([], {hour: "2-digit", minute:"2-digit"});
+  }
+  // Очистка html (безопасность)
+  function escapeHtml(text){
+    if(!text) return "";
+    return text.replace(/[&<>"']/g, m => {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[m];
+    });
   }
 
-  // --- Рендер пользователей ---
-  function renderUser(uid, data){
-    // не рендерим забаненных вообще в список
-    if(bannedUsers.has(uid)) return;
+  // --- Отрисовка списков ---
 
-    let row = usersListEl.querySelector(`[data-uid="${uid}"]`);
-    if(!row){
-      row = el('div','user-row');
-      row.dataset.uid = uid;
-      row.addEventListener('click', () => openPrivateChat(uid, data.username));
-      const av = el('div','avatar');
-      av.style.background = colorFromString(data.username||uid);
-      av.textContent = initials(data.username||'U');
-      const meta = el('div','meta');
-      const name = el('div','name', data.username||'Без имени');
-      const status = el('div','status', data.online ? 'онлайн' : `последний: ${data.lastSeen ? new Date(data.lastSeen).toLocaleString() : '—'}`);
-      meta.appendChild(name); meta.appendChild(status);
-      row.appendChild(av); row.appendChild(meta);
-      usersListEl.appendChild(row);
-    } else {
-      const name = row.querySelector('.meta .name');
-      const status = row.querySelector('.meta .status');
-      if(name) name.textContent = data.username||'Без имени';
-      if(status) status.textContent = data.online ? 'онлайн' : `последний: ${data.lastSeen ? new Date(data.lastSeen).toLocaleString() : '—'}`;
+  // Список групп
+  function renderGroups(){
+    groupsListEl.innerHTML = "";
+    for(let id in groupsData){
+      const group = groupsData[id];
+      const div = el("div","item", group.name);
+      div.dataset.id = id;
+      if(activeChat === id) div.classList.add("active");
+      div.onclick = () => openChat(id, group.name, true);
+      groupsListEl.appendChild(div);
     }
   }
 
-  // --- Открытие приватного чата (ЛС) ---
-  let activeChat = 'general'; // general или uid пользователя для ЛС
-  let activeChatName = 'Общий чат';
-
-  function openPrivateChat(uid, username){
-    if(uid === 'console') return; // нельзя ЛС с консолью
-
-    activeChat = uid;
-    activeChatName = username;
-    messagesEl.innerHTML = ''; // очистить
-    loadMessagesForChat(uid);
-    updateHeaderChat();
-  }
-
-  function updateHeaderChat(){
-    headerUser.innerHTML = `<div style="display:flex; align-items:center; gap:8px; user-select:none;">
-      <div style="width:36px; height:36px; border-radius:8px; background:${colorFromString(activeChatName)}; display:flex; align-items:center; justify-content:center; font-weight:700;">
-        ${initials(activeChatName)}
-      </div>
-      <div style="display:flex; flex-direction:column; text-align:right; color:var(--nice); user-select:none;">
-        <div style="font-weight:700;">${activeChatName}</div>
-        <div style="font-size:12px; color:var(--muted); cursor:pointer;" title="Двойной клик — выйти" id="headerUserNameSub">Вы: ${currentUser?.displayName || currentUser?.email.split('@')[0]}</div>
-      </div>
-    </div>
-    <button id="logoutBtn" style="margin-left: 12px; cursor:pointer; background:var(--accent); border:none; padding:6px 10px; border-radius:8px; font-weight:700; color:#fff;">Выйти</button>`;
-
-    // Добавляем обработчик кнопки выхода
-    document.getElementById('logoutBtn').onclick = () => {
-      signOut(auth);
-    };
-  }
-
-  // --- Загрузка сообщений ---
-  let messagesRef = null;
-  let messagesListener = null;
-
-  function chatPath(uid) {
-    // общий чат — 'chats/general'
-    // лс — 'chats/private/{uid1}_{uid2}' (отсортированы)
-    if(uid === 'general') return 'chats/general';
-
-    // Чтобы не было разных ключей для пары, отсортируем uids
-    let uids = [currentUser.uid, uid].sort();
-    return `chats/private/${uids[0]}_${uids[1]}`;
-  }
-
-  function loadMessagesForChat(uid){
-    if(messagesListener){
-      messagesListener();
-      messagesListener = null;
+  // Список пользователей (кроме себя и забаненных)
+  function renderUsers(){
+    usersListEl.innerHTML = "";
+    for(let uid in usersData){
+      if(uid === currentUser.uid) continue; // себя не показываем
+      if(bannedUsers.has(uid)) continue; // забаненных не показываем
+      const u = usersData[uid];
+      const div = el("div","item");
+      div.dataset.uid = uid;
+      div.onclick = () => openChat(uid, u.username || u.email, false);
+      const av = el("div","avatar", initials(u.username || u.email));
+      av.style.background = colorFromString(u.username || u.email);
+      div.appendChild(av);
+      const nameSpan = el("span", "", u.username || u.email);
+      div.appendChild(nameSpan);
+      usersListEl.appendChild(div);
     }
-    messagesEl.innerHTML = '';
+  }
 
-    messagesRef = ref(db, chatPath(uid));
-
-    // слушаем новые сообщения
+  // --- Открытие чата ---
+  // isGroup = true если группа, false если ЛС или общий чат
+  async function openChat(id, name, isGroup = false){
+    activeChat = id;
+    activeChatName = name;
+    chatTitleEl.textContent = (isGroup) ? `Группа: ${name}` : (id === "general" ? "Общий чат" : `ЛС: ${name}`);
+    chatMessagesEl.innerHTML = "";
+    // Подписываемся на сообщения
+    if(messagesListener) messagesListener(); // отписка
+    messagesListener = null;
+    messagesRef = ref(db, chatPath(id));
     const q = query(messagesRef, orderByChild('timestamp'));
     messagesListener = onChildAdded(q, snapshot => {
       const msg = snapshot.val();
       if(!msg) return;
-
-      if(isUserBanned(msg.uid)) return; // бан - не показываем сообщения
-
-      // Если пользователь замучен и это он пишет — скрываем сообщение
-      if(isUserMuted(msg.uid)) return;
-
-      // Показ сообщения
+      if(isUserBanned(msg.uid)) return; // баним сообщения
+      if(isUserMuted(msg.uid)) return; // мутим сообщения
       renderMessage(msg);
-      // Скролл вниз
-      messagesEl.scrollTop = messagesEl.scrollHeight;
+      chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
     });
   }
 
-  // --- Проверка бан/мут ---
-  function isUserMuted(uid){
-    if(!mutedUsers[uid]) return false;
-    const endTs = mutedUsers[uid];
-    return (Date.now() < endTs);
-  }
-  function isUserBanned(uid){
-    return bannedUsers.has(uid);
+  // --- Построение пути чата в БД ---
+  function chatPath(id){
+    if(id === "general") return "chats/general";
+    if(groupsData[id]) return `chats/groups/${id}`;
+    // ЛС — составляем ключ по uid сортированному
+    let arr = [currentUser.uid, id].sort();
+    return `chats/private/${arr[0]}_${arr[1]}`;
   }
 
-  // --- Отрисовка сообщения ---
+  // --- Рендер сообщений ---
   function renderMessage(msg){
     const mine = (msg.uid === currentUser.uid);
-    const div = el('div','message');
-    if(mine) div.classList.add('mine');
-    if(msg.fromConsole) div.classList.add('console');
+    const div = el("div","message");
+    if(mine) div.classList.add("mine");
+    if(msg.fromConsole) div.classList.add("console");
 
-    const meta = el('div','meta');
-    const avatar = el('div','avatar-sm');
-    avatar.style.background = colorFromString(msg.username||msg.uid);
-    avatar.textContent = initials(msg.username||msg.uid);
-    const author = el('div','author', msg.fromConsole ? "[console]" : (msg.username || "Без имени"));
-    const time = el('div','time', timeString(msg.timestamp));
+    const meta = el("div","meta");
+    const avatar = el("div","avatar-sm");
+    avatar.style.background = colorFromString(msg.username || msg.uid);
+    avatar.textContent = initials(msg.username || msg.uid);
+    const author = el("div","author", msg.fromConsole ? "[console]" : (msg.username || "Без имени"));
+    const time = el("div","time", formatTime(msg.timestamp));
 
     meta.appendChild(avatar);
     meta.appendChild(author);
     meta.appendChild(time);
 
-    const text = el('div','msg-text');
-    text.innerHTML = escapeHtml(msg.text).replace(/\n/g,'<br>');
+    const text = el("div","msg-text");
+    text.innerHTML = escapeHtml(msg.text).replace(/\n/g,"<br>");
 
     div.appendChild(meta);
     div.appendChild(text);
 
-    // Кнопка удалить для своих сообщений
-    if(mine && !msg.fromConsole){
-      const del = el('button','del-btn','×');
-      del.title = "Удалить сообщение";
-      del.onclick = () => {
-        remove(ref(db, chatPath(activeChat) + '/' + msg.key));
-      };
-      div.appendChild(del);
-    }
-
-    messagesEl.appendChild(div);
+    chatMessagesEl.appendChild(div);
   }
 
-  // --- Escape HTML ---
-  function escapeHtml(text){
-    if(!text) return '';
-    return text.replace(/[&<>"']/g, function(m){
-      return {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      }[m];
-    });
+  // --- Проверка бан/мут ---
+  function isUserMuted(uid){
+    if(!mutedUsers[uid]) return false;
+    return (Date.now() < mutedUsers[uid]);
+  }
+  function isUserBanned(uid){
+    return bannedUsers.has(uid);
   }
 
   // --- Отправка сообщений ---
   async function sendMessage(text){
     text = text.trim();
     if(!text) return;
-
-    // Проверки бан/мут
     if(isUserBanned(currentUser.uid)){
-      alert('Вы забанены и не можете писать в чат.');
+      alert("Вы забанены и не можете писать.");
       return;
     }
     if(isUserMuted(currentUser.uid)){
-      alert('Вы замучены и не можете писать в чат.');
+      alert("Вы замучены и не можете писать.");
       return;
     }
-
-    // Проверка команд (только для админов)
-    if(text.startsWith('/') && isAdmin()){
+    // Если команда админа
+    if(text.startsWith("/") && isAdmin()){
       await handleCommand(text);
-      textInput.value = '';
+      messageInput.value = "";
       return;
     }
 
     const msgObj = {
       uid: currentUser.uid,
-      username: currentUser.displayName || currentUser.email.split('@')[0],
+      username: currentUser.displayName || currentUser.email.split("@")[0],
       text,
       timestamp: Date.now(),
       fromConsole: false,
@@ -527,65 +513,63 @@ textarea{
     const newRef = push(ref(db, chatPath(activeChat)));
     msgObj.key = newRef.key;
     await set(newRef, msgObj);
-
-    textInput.value = '';
+    messageInput.value = "";
   }
 
-  // --- Обработка команд ---
+  // --- Обработка команд админа ---
   async function handleCommand(text){
-    const parts = text.trim().split(' ');
+    const parts = text.trim().split(" ");
     const cmd = parts[0].toLowerCase();
     const args = parts.slice(1);
 
-    if(cmd === '/mute'){
+    if(cmd === "/mute"){
       if(args.length < 2){
-        sendConsoleMessage('Использование: /mute <ник> <время_в_минутах>');
-        return;
-      }
-      const [nick, timeStr] = args;
-      const timeMin = parseInt(timeStr);
-      if(isNaN(timeMin) || timeMin <= 0){
-        sendConsoleMessage('Неверное время мута');
-        return;
-      }
-      const userToMute = findUserByNick(nick);
-      if(!userToMute){
-        sendConsoleMessage(`Пользователь "${nick}" не найден`);
-        return;
-      }
-      mutedUsers[userToMute.uid] = Date.now() + timeMin*60*1000;
-      sendConsoleMessage(`Пользователь "${nick}" замучен на ${timeMin} минут.`);
-    } else if(cmd === '/ban'){
-      if(args.length < 1){
-        sendConsoleMessage('Использование: /ban <ник>');
+        sendConsoleMessage("Использование: /mute <ник> <минуты>");
         return;
       }
       const nick = args[0];
-      const userToBan = findUserByNick(nick);
-      if(!userToBan){
+      const timeMin = parseInt(args[1]);
+      if(isNaN(timeMin) || timeMin <= 0){
+        sendConsoleMessage("Неверное время мута");
+        return;
+      }
+      const user = findUserByNick(nick);
+      if(!user){
         sendConsoleMessage(`Пользователь "${nick}" не найден`);
         return;
       }
-      bannedUsers.add(userToBan.uid);
-      // Можно дополнительно удалять из онлайн и из базы, если нужно
-      sendConsoleMessage(`Пользователь "${nick}" забанен.`);
-      // Удаляем из пользователей, чтобы не показывался в списке
-      remove(ref(db, 'users/' + userToBan.uid));
-    } else if(cmd === '/say'){
+      mutedUsers[user.uid] = Date.now() + timeMin * 60000;
+      sendConsoleMessage(`Пользователь "${nick}" замучен на ${timeMin} минут.`);
+    } else if(cmd === "/ban"){
       if(args.length < 1){
-        sendConsoleMessage('Использование: /say <сообщение>');
+        sendConsoleMessage("Использование: /ban <ник>");
         return;
       }
-      const sayText = args.join(' ');
-      // Пишем сообщение от консоли в общий чат
+      const nick = args[0];
+      const user = findUserByNick(nick);
+      if(!user){
+        sendConsoleMessage(`Пользователь "${nick}" не найден`);
+        return;
+      }
+      bannedUsers.add(user.uid);
+      sendConsoleMessage(`Пользователь "${nick}" забанен.`);
+      // Удаляем из users
+      await remove(ref(db, "users/" + user.uid));
+      // При необходимости — удаляем его сессии и т.п.
+    } else if(cmd === "/say"){
+      if(args.length < 1){
+        sendConsoleMessage("Использование: /say <сообщение>");
+        return;
+      }
+      const sayText = args.join(" ");
       const msgObj = {
-        uid: 'console',
-        username: '[console]',
+        uid: "console",
+        username: "[console]",
         text: sayText,
         timestamp: Date.now(),
         fromConsole: true,
       };
-      const newRef = push(ref(db, 'chats/general'));
+      const newRef = push(ref(db, "chats/general"));
       msgObj.key = newRef.key;
       await set(newRef, msgObj);
     } else {
@@ -593,148 +577,168 @@ textarea{
     }
   }
 
-  // --- Найти пользователя по нику ---
-  function findUserByNick(nick){
-    for(let [uid, data] of onlineUsers.entries()){
-      if(data.username && data.username.toLowerCase() === nick.toLowerCase()){
-        return {uid, ...data};
-      }
-    }
-    return null;
-  }
-
-  // --- Отправка сообщения от консоли (видно всем) ---
+  // --- Отправка сообщения от консоли ---
   async function sendConsoleMessage(text){
     const msgObj = {
-      uid: 'console',
-      username: '[console]',
+      uid: "console",
+      username: "[console]",
       text,
       timestamp: Date.now(),
       fromConsole: true,
     };
-    const newRef = push(ref(db, 'chats/general'));
+    const newRef = push(ref(db, "chats/general"));
     msgObj.key = newRef.key;
     await set(newRef, msgObj);
+  }
+
+  // --- Найти пользователя по нику ---
+  function findUserByNick(nick){
+    nick = nick.toLowerCase();
+    for(let uid in usersData){
+      const user = usersData[uid];
+      if(user.username && user.username.toLowerCase() === nick) return {uid, ...user};
+    }
+    return null;
   }
 
   // --- Проверка админа ---
   function isAdmin(){
     if(!currentUser) return false;
-    const nick = currentUser.displayName || currentUser.email.split('@')[0];
-    if(ADMINS.has(nick.toLowerCase()) || ADMINS.has(currentUser.email.toLowerCase())) return true;
+    const nick = (currentUser.displayName || currentUser.email.split("@")[0]).toLowerCase();
+    if(ADMINS.has(nick) || ADMINS.has(currentUser.email.toLowerCase())) return true;
     return false;
   }
 
-  // --- Отображаем список пользователей из БД ---
-  function updateUsersList(usersData){
-    usersListEl.innerHTML = '';
-    for(let [uid, data] of Object.entries(usersData || {})){
-      onlineUsers.set(uid, data);
-      renderUser(uid, data);
-    }
+  // --- Загрузка и отображение списка пользователей ---
+  function listenUsers(){
+    const usersRef = ref(db, "users");
+    onValue(usersRef, snapshot => {
+      usersData = snapshot.val() || {};
+      renderUsers();
+    });
   }
+
+  // --- Загрузка и отображение групп ---
+  function listenGroups(){
+    const groupsRef = ref(db, "groups");
+    onValue(groupsRef, snapshot => {
+      groupsData = snapshot.val() || {};
+      renderGroups();
+    });
+  }
+
+  // --- Добавление / обновление текущего пользователя в users ---
+  async function updateCurrentUserOnline(){
+    if(!currentUser) return;
+    const userRef = ref(db, "users/" + currentUser.uid);
+    await set(userRef, {
+      username: currentUser.displayName || currentUser.email.split("@")[0],
+      email: currentUser.email,
+      online: true,
+      lastSeen: Date.now()
+    });
+    onDisconnect(userRef).remove();
+  }
+
+  // --- Отписка от сообщений ---
+  let messagesListener = null;
+  let messagesRef = null;
 
   // --- Авторизация и регистрация через prompt ---
   async function loginFlow(){
     while(true){
-      let email = prompt('Введите email для входа или регистрации:');
-      if(!email) return alert('Вход отменён');
-      let pass = prompt('Введите пароль:');
-      if(!pass) return alert('Вход отменён');
+      let email = prompt("Введите email для входа или регистрации:");
+      if(!email) {
+        alert("Вход отменён");
+        return false;
+      }
+      let pass = prompt("Введите пароль:");
+      if(!pass) {
+        alert("Вход отменён");
+        return false;
+      }
 
       try {
         await signInWithEmailAndPassword(auth, email, pass);
-        break;
-      } catch (e) {
-        if(e.code === 'auth/user-not-found'){
-          // создаём нового пользователя
+        return true;
+      } catch(e){
+        if(e.code === "auth/user-not-found"){
+          // Регистрируем
           try {
             await createUserWithEmailAndPassword(auth, email, pass);
-            // обновим displayName — запросим ник
-            let nick = prompt('Регистрация успешна! Введите ваш ник для отображения:');
+            // Запрос ника
+            let nick = prompt("Регистрация успешна! Введите ваш ник:");
             if(nick && auth.currentUser){
               await updateProfile(auth.currentUser, {displayName: nick});
             }
-            break;
-          } catch (e2) {
-            alert('Ошибка регистрации: '+e2.message);
+            return true;
+          } catch(e2){
+            alert("Ошибка регистрации: " + e2.message);
           }
         } else {
-          alert('Ошибка входа: '+e.message);
+          alert("Ошибка входа: " + e.message);
         }
       }
     }
   }
 
-  // --- Обновление данных текущего пользователя в users ---
-  async function updateCurrentUserOnline(){
-    if(!currentUser) return;
-    const userRef = ref(db, 'users/' + currentUser.uid);
-    await set(userRef, {
-      username: currentUser.displayName || currentUser.email.split('@')[0],
-      email: currentUser.email,
-      online: true,
-      lastSeen: Date.now()
-    });
-    // Автоматически убрать при отключении
-    onDisconnect(userRef).remove();
-  }
+  // --- Logout ---
+  logoutBtn.onclick = () => {
+    signOut(auth);
+  };
 
-  // --- Слушаем изменения в users ---
-  function listenUsers(){
-    const usersRef = ref(db, 'users');
-    onValue(usersRef, snapshot => {
-      updateUsersList(snapshot.val());
-    });
-  }
+  // --- Отправка сообщения по submit формы ---
+  messageForm.onsubmit = (e) => {
+    e.preventDefault();
+    sendMessage(messageInput.value);
+  };
 
-  // --- Обработчики UI ---
-  sendBtn.onclick = () => sendMessage(textInput.value);
-  textInput.addEventListener('keydown', (e) => {
-    if(e.key === 'Enter' && !e.shiftKey){
-      e.preventDefault();
-      sendMessage(textInput.value);
-    }
-  });
-
-  consoleToggle.onclick = () => {
-    if(consolePanel.style.display === 'flex'){
-      consolePanel.style.display = 'none';
+  // --- Консоль ---
+  consoleToggleBtn.onclick = () => {
+    if(consolePanel.style.display === "flex"){
+      consolePanel.style.display = "none";
     } else {
-      consolePanel.style.display = 'flex';
+      consolePanel.style.display = "flex";
       consoleInput.focus();
     }
   };
-  consoleSend.onclick = async () => {
+  consoleSendBtn.onclick = async () => {
     if(!consoleInput.value.trim()) return;
-    await handleCommand(consoleInput.value);
-    consoleInput.value = '';
+    await handleCommand(consoleInput.value.trim());
+    consoleInput.value = "";
   };
 
-  // --- Основной flow ---
-
+  // --- Слушаем статус авторизации ---
   onAuthStateChanged(auth, async user => {
     if(user){
       currentUser = user;
       await updateCurrentUserOnline();
+      listenUsers();
+      listenGroups();
 
-      // Показываем админскую кнопку, если админ
+      // Если админ — показать кнопку консоли
       if(isAdmin()){
-        consoleToggle.style.display = 'block';
+        consoleToggleBtn.style.display = "block";
       } else {
-        consoleToggle.style.display = 'none';
+        consoleToggleBtn.style.display = "none";
+        consolePanel.style.display = "none";
       }
 
-      // Загрузить общий чат сразу
-      openPrivateChat('general', 'Общий чат');
+      // Открываем общий чат
+      await openChat("general", "Общий чат", false);
 
-      listenUsers();
-
-      updateHeaderChat();
+      // Обновляем заголовок
+      chatTitleEl.textContent = "Общий чат";
     } else {
       currentUser = null;
-      consoleToggle.style.display = 'none';
-      // Запускаем логин
+      usersListEl.innerHTML = "";
+      groupsListEl.innerHTML = "";
+      chatMessagesEl.innerHTML = "";
+      chatTitleEl.textContent = "Пожалуйста, войдите";
+
+      consoleToggleBtn.style.display = "none";
+      consolePanel.style.display = "none";
+
       await loginFlow();
     }
   });

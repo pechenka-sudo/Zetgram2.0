@@ -303,7 +303,7 @@ textarea{
     </section>
   </div>
 
-  <button class="new-chat-btn" id="newChatBtn" title="Новый чат +"></button>
+  <button class="new-chat-btn" id="newChatBtn" title="Новый чат +">+</button>
 
   <div id="adBanner" aria-hidden="true">
     <iframe data-aa="2406373" src="//acceptable.a-ads.com/2406373/?size=Adaptive" referrerpolicy="no-referrer"></iframe>
@@ -381,7 +381,6 @@ const auth = getAuth(app);
 const db = getDatabase(app);
 const storage = getStorage(app);
 
-// UI refs
 const headerUser = document.getElementById('headerUser');
 const usersListEl = document.getElementById('usersList');
 const groupsListEl = document.getElementById('groupsList');
@@ -403,139 +402,96 @@ const toggleAuthLink = document.getElementById('toggleAuthLink');
 
 let currentUser = null;
 let currentChatId = null; // uid for private, 'group:<groupId>' for group chats
-let chats = {}; // chatId -> {type:'user'|'group'|'admin', members:[], name:string}
 let displayedMessages = new Set();
+
+// Группы чатов
 let groups = [
   { id: 'group1', name: 'Общий чат' },
   { id: 'admins', name: 'Админская консоль', adminOnly: true }
 ];
 
-// Helpers
+// Проверка, является ли пользователь админом (здесь по email)
+function isAdmin(user) {
+  if (!user) return false;
+  return user.email === 'kalysmuhamedzanov@gmail.com' && user.displayName === 'pechenka';
+}
 
-function el(tag, cls, txt){
+// Создание DOM элемента
+function el(tag, cls, txt) {
   const e = document.createElement(tag);
-  if(cls) e.className = cls;
-  if(txt !== undefined) e.textContent = txt;
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
   return e;
 }
 
-function timeString(ts){
-  const d = new Date(ts);
-  return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+// Получить инициалы для аватарки
+function initials(name) {
+  if (!name) return '??';
+  return name.split(' ').map(s => s[0]?.toUpperCase() || '').slice(0, 2).join('');
 }
 
-function initials(name){
-  if(!name) return '??';
-  return name.split(' ').map(s=>s[0]?.toUpperCase()||'').slice(0,2).join('');
-}
-
-function colorFromString(s){
-  let h=0; for(let i=0;i<s.length;i++) h = (h<<5)-h + s.charCodeAt(i);
-  const hue = Math.abs(h)%360;
+// Генерация цвета из строки
+function colorFromString(s) {
+  let h = 0; for (let i = 0; i < s.length; i++) h = (h << 5) - h + s.charCodeAt(i);
+  const hue = Math.abs(h) % 360;
   return `hsl(${hue} 80% 35%)`;
 }
 
-// --- AUTH & PRESENCE ---
+function timeString(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
-function setPresence(user){
-  if(!user) return;
+// --- Авторизация и присутствие ---
+function setPresence(user) {
+  if (!user) return;
   const userRef = ref(db, 'users/' + user.uid);
   set(userRef, { username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: true, lastSeen: Date.now(), uid: user.uid });
   onDisconnect(userRef).set({ username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: false, lastSeen: Date.now(), uid: user.uid });
 }
 
-onAuthStateChanged(auth, async (user) => {
-  if(user){
-    currentUser = user;
-    setPresence(user);
-    headerUser.innerHTML = `<div style="display:flex;align-items:center;gap:8px;user-select:none">Вы: <strong>${user.displayName || user.email.split('@')[0]}</strong> — <button id="logoutBtn">Выйти</button></div>`;
-    document.getElementById('logoutBtn').onclick = async () => {
-      await signOut(auth);
-      location.reload();
-    };
-    authModal.style.display = 'none';
-    loadUsers();
-    loadGroups();
-    switchChat('group1'); // открываем общий чат
-  } else {
-    currentUser = null;
-    authModal.style.display = 'flex';
-    headerUser.textContent = 'Не авторизован';
-    clearMessages();
-    clearUsers();
-    clearGroups();
-  }
-});
+function clearPresence(user) {
+  if (!user) return;
+  const userRef = ref(db, 'users/' + user.uid);
+  set(userRef, { username: user.displayName || (user.email && user.email.split('@')[0]) || 'Без имени', online: false, lastSeen: Date.now(), uid: user.uid });
+}
 
-// Регистрация/Вход
-
-let isRegister = false;
-
-toggleAuthLink.onclick = (e) => {
-  e.preventDefault();
-  isRegister = !isRegister;
-  authSubmitBtn.textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
-  toggleAuthText.innerHTML = isRegister
-    ? 'Есть аккаунт? <a href="#" id="toggleAuthLink">Войти</a>'
-    : 'Нет аккаунта? <a href="#" id="toggleAuthLink">Зарегистрироваться</a>';
-  // Чтобы ссылка работала снова
-  document.getElementById('toggleAuthLink').onclick = toggleAuthLink.onclick;
-  nicknameInput.style.display = isRegister ? 'block' : 'none';
-  nicknameInput.value = '';
-};
-
-authForm.onsubmit = async (e) => {
-  e.preventDefault();
-  authError.style.display = 'none';
-  try {
-    if(isRegister){
-      if(!nicknameInput.value.trim()) throw new Error('Введите ник для регистрации');
-      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-      await updateProfile(userCred.user, { displayName: nicknameInput.value.trim() });
-    } else {
-      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
-    }
-  } catch(err) {
-    authError.textContent = err.message || 'Ошибка авторизации';
-    authError.style.display = 'block';
-  }
-};
-
-// --- LOAD USERS AND GROUPS ---
-
-function clearUsers(){
+// --- Загрузка пользователей ---
+function clearUsers() {
   usersListEl.innerHTML = '';
 }
-function clearGroups(){
+function clearGroups() {
   groupsListEl.innerHTML = '';
 }
-function clearMessages(){
+function clearMessages() {
   messagesEl.innerHTML = '';
   displayedMessages.clear();
 }
-
-async function loadUsers(){
+async function loadUsers() {
   clearUsers();
   const usersRef = ref(db, 'users');
   onValue(usersRef, snapshot => {
     clearUsers();
     const val = snapshot.val() || {};
-    // показываем всех кроме текущего пользователя
-    Object.values(val).forEach(u=>{
-      if(currentUser && u.uid === currentUser.uid) return;
+    const usersArray = Object.values(val).sort((a, b) => {
+      if (a.online === b.online) return (a.username || '').localeCompare(b.username || '');
+      return a.online ? -1 : 1;
+    });
+    usersArray.forEach(u => {
+      if (currentUser && u.uid === currentUser.uid) return; // не показываем себя
       addUserRow(u);
     });
   });
 }
-function addUserRow(user){
+function addUserRow(user) {
   const elRow = el('div', 'user-row');
   elRow.dataset.uid = user.uid;
   elRow.tabIndex = 0;
   elRow.onclick = () => {
     switchChat(user.uid);
   };
-  elRow.onkeydown = (e) => {
-    if(e.key === 'Enter' || e.key === ' ') {
+  elRow.onkeydown = e => {
+    if (e.key === 'Enter' || e.key === ' ') {
       switchChat(user.uid);
       e.preventDefault();
     }
@@ -550,23 +506,24 @@ function addUserRow(user){
   usersListEl.appendChild(elRow);
 }
 
-async function loadGroups(){
+// Загрузка групп
+async function loadGroups() {
   clearGroups();
-  groups.forEach(g=>{
-    if(g.adminOnly && !isAdmin(currentUser)) return; // показываем админскую консоль только админам
+  groups.forEach(g => {
+    if (g.adminOnly && !isAdmin(currentUser)) return;
     const elRow = el('div', 'group-row');
     elRow.dataset.gid = g.id;
     elRow.tabIndex = 0;
     elRow.onclick = () => {
       switchChat('group:' + g.id);
     };
-    elRow.onkeydown = (e) => {
-      if(e.key === 'Enter' || e.key === ' ') {
+    elRow.onkeydown = e => {
+      if (e.key === 'Enter' || e.key === ' ') {
         switchChat('group:' + g.id);
         e.preventDefault();
       }
     };
-    const avatar = el('div', 'avatar', g.name.split(' ').map(s=>s[0]).join(''));
+    const avatar = el('div', 'avatar', g.name.split(' ').map(s => s[0]).join(''));
     avatar.style.backgroundColor = '#6b0000';
     const meta = el('div', 'meta');
     const name = el('div', 'name', g.name);
@@ -576,21 +533,12 @@ async function loadGroups(){
   });
 }
 
-// Проверка прав администратора (в данном примере просто проверяем email)
-function isAdmin(user){
-  if(!user) return false;
-  const adminsEmails = ['admin@example.com']; // Заменить на реальные емейлы админов
-  return adminsEmails.includes(user.email);
-}
-
-// --- CHAT ---
-
-function switchChat(chatId){
-  if(currentChatId === chatId) return;
+// Переключение чата
+function switchChat(chatId) {
+  if (currentChatId === chatId) return;
   currentChatId = chatId;
   clearMessages();
 
-  // Убираем выделение в списках
   Array.from(usersListEl.children).forEach(c => c.classList.toggle('active', c.dataset.uid === chatId));
   Array.from(groupsListEl.children).forEach(c => c.classList.toggle('active', 'group:' + c.dataset.gid === chatId));
 
@@ -598,28 +546,26 @@ function switchChat(chatId){
 }
 
 let messagesListener = null;
+function listenMessages() {
+  if (messagesListener) messagesListener();
 
-function listenMessages(){
-  if(messagesListener) messagesListener();
-
-  if(!currentChatId) return;
+  if (!currentChatId) return;
 
   const msgsRef = ref(db, 'messages/' + currentChatId);
   messagesListener = onChildAdded(msgsRef, snapshot => {
     const msg = snapshot.val();
-    if(displayedMessages.has(snapshot.key)) return;
+    if (displayedMessages.has(snapshot.key)) return;
     displayedMessages.add(snapshot.key);
     addMessage(msg, snapshot.key);
   });
 }
 
-// Добавляем сообщение в чат
-function addMessage(msg, msgId){
+// Добавление сообщения в чат
+function addMessage(msg, msgId) {
   const mine = currentUser && msg.senderUid === currentUser.uid;
   const elMsg = el('div', 'message' + (mine ? ' mine' : ''));
   elMsg.id = 'msg-' + msgId;
 
-  // Мета - имя + время
   const meta = el('div', 'meta');
   const avatar = el('div', 'avatar-sm', initials(msg.senderName));
   avatar.style.backgroundColor = colorFromString(msg.senderName);
@@ -629,26 +575,22 @@ function addMessage(msg, msgId){
   meta.append(avatar, author, time);
   elMsg.appendChild(meta);
 
-  // Текст сообщения
   const txt = el('div', 'msg-text');
   txt.textContent = msg.text || '';
-
   elMsg.appendChild(txt);
 
-  // Если есть картинка
-  if(msg.imageUrl){
+  if (msg.imageUrl) {
     const img = document.createElement('img');
     img.src = msg.imageUrl;
     img.className = 'msg-img';
     elMsg.appendChild(img);
   }
 
-  // Кнопка удаления для своих сообщений
-  if(mine){
+  if (mine) {
     const delBtn = el('button', 'del-btn', '×');
     delBtn.title = 'Удалить сообщение';
     delBtn.onclick = async () => {
-      if(confirm('Удалить сообщение?')) {
+      if (confirm('Удалить сообщение?')) {
         const msgRef = ref(db, `messages/${currentChatId}/${msgId}`);
         await remove(msgRef);
       }
@@ -661,14 +603,14 @@ function addMessage(msg, msgId){
 }
 
 // Отправка сообщения
-async function sendMessage(){
-  if(!currentUser) return alert('Сначала войдите в систему');
+async function sendMessage() {
+  if (!currentUser) return alert('Сначала войдите в систему');
   const text = textInput.value.trim();
-  if(!text && !fileInput.files.length) return;
+  if (!text && !fileInput.files.length) return;
   sendBtn.disabled = true;
 
   let imageUrl = null;
-  if(fileInput.files.length){
+  if (fileInput.files.length) {
     const file = fileInput.files[0];
     const imgRef = storageRef(storage, `chat_images/${currentChatId}/${Date.now()}_${file.name}`);
     await uploadBytes(imgRef, file);
@@ -691,15 +633,13 @@ async function sendMessage(){
 }
 
 sendBtn.onclick = sendMessage;
-
 textInput.addEventListener('keydown', e => {
-  if(e.key === 'Enter' && !e.shiftKey){
+  if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
     sendMessage();
   }
 });
 
-// Новый чат (сброс выделения, выбор группы или пользователя)
 newChatBtn.onclick = () => {
   currentChatId = null;
   clearMessages();
@@ -708,43 +648,62 @@ newChatBtn.onclick = () => {
   textInput.focus();
 };
 
-// --- End of script ---
+// --- Авторизация ---
 
+let isRegister = false;
+
+toggleAuthLink.onclick = e => {
+  e.preventDefault();
+  isRegister = !isRegister;
+  authSubmitBtn.textContent = isRegister ? 'Зарегистрироваться' : 'Войти';
+  toggleAuthText.innerHTML = isRegister
+    ? 'Есть аккаунт? <a href="#" id="toggleAuthLink">Войти</a>'
+    : 'Нет аккаунта? <a href="#" id="toggleAuthLink">Зарегистрироваться</a>';
+  document.getElementById('toggleAuthLink').onclick = toggleAuthLink.onclick;
+  nicknameInput.style.display = isRegister ? 'block' : 'none';
+  nicknameInput.value = '';
+};
+
+authForm.onsubmit = async e => {
+  e.preventDefault();
+  authError.style.display = 'none';
+  try {
+    if (isRegister) {
+      if (!nicknameInput.value.trim()) throw new Error('Введите ник для регистрации');
+      const userCred = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+      await updateProfile(userCred.user, { displayName: nicknameInput.value.trim() });
+    } else {
+      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+    }
+  } catch (err) {
+    authError.textContent = err.message || 'Ошибка авторизации';
+    authError.style.display = 'block';
+  }
+};
+
+// Отслеживание состояния авторизации
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  if (user) {
+    headerUser.innerHTML = `Вы: <strong>${user.displayName || user.email.split('@')[0]}</strong> — <button id="logoutBtn" aria-label="Выйти">Выйти</button>`;
+    document.getElementById('logoutBtn').onclick = async () => {
+      await signOut(auth);
+      location.reload();
+    };
+    authModal.style.display = 'none';
+    setPresence(user);
+    loadUsers();
+    loadGroups();
+    switchChat('group:group1'); // Открываем общий чат
+  } else {
+    headerUser.textContent = 'Не авторизован';
+    authModal.style.display = 'flex';
+    clearUsers();
+    clearGroups();
+    clearMessages();
+  }
+});
 </script>
 
 </body>
-  <style>
-  #frame {
-    position: fixed;
-    bottom: 8px;
-    left: 8px;
-    width: 180px;
-    height: 50px;
-    background: rgba(0, 0, 0, 0.25);
-    z-index: 99999;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    overflow: hidden;
-    pointer-events: none; /* чтобы реклама не блокировала клики по другим элементам */
-  }
-  #frame iframe {
-    width: 100% !important;
-    height: 100% !important;
-    border: 0;
-    display: block;
-    pointer-events: auto; /* чтобы клики по самому iframe работали */
-  }
-</style>
-
-<div id="frame" aria-label="Реклама">
-  <iframe 
-    data-aa="2406373" 
-    src="//acceptable.a-ads.com/2406373/?size=180x50&background_color=ddd&title_color=b27&title_hover_color=fffefe" 
-    scrolling="no" 
-    loading="lazy" 
-    aria-hidden="true" 
-    tabindex="-1"
-  ></iframe>
-</div>
-
 </html>

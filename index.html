@@ -771,4 +771,38 @@
 </script>
 
 </body>
+  <style>
+  #frame {
+    position: fixed;
+    bottom: 8px;
+    left: 8px;
+    width: 180px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 99999;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    overflow: hidden;
+    pointer-events: none; /* чтобы реклама не блокировала клики по другим элементам */
+  }
+  #frame iframe {
+    width: 100% !important;
+    height: 100% !important;
+    border: 0;
+    display: block;
+    pointer-events: auto; /* чтобы клики по самому iframe работали */
+  }
+</style>
+
+<div id="frame" aria-label="Реклама">
+  <iframe 
+    data-aa="2406373" 
+    src="//acceptable.a-ads.com/2406373/?size=180x50&background_color=ddd&title_color=b27&title_hover_color=fffefe" 
+    scrolling="no" 
+    loading="lazy" 
+    aria-hidden="true" 
+    tabindex="-1"
+  ></iframe>
+</div>
+
 </html>
